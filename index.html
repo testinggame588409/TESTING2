@@ -1,0 +1,2608 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>奪金挑戰賽</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link href="common.css" rel="stylesheet" type="text/css" />
+  <style>
+  	.top-div { display: block; margin: 4px; padding: 2px; margin-left: 20px }
+  	.top-div input { font-size: normal; width: 40px; text-align: center; border: 1px solid #eee;}
+  	.top-div span { font-size: x-small; font-weight: bold; padding: 2px; margin: 2px; }
+
+    /* 🌟 核心修正：強制 Canvas 關閉模糊，保持 Pixel Art 高清起格！ */
+    #canvas {
+        image-rendering: -moz-crisp-edges;
+        image-rendering: -webkit-crisp-edges;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        background-color: #72D7EE;
+        display: block;
+    }
+
+    body { margin: 0; padding: 0; overflow: hidden; background: #111; font-family: 'Microsoft JhengHei', Arial, sans-serif; }
+
+    /* ========== 電腦版手機SIZE置中容器 ========== */
+    #gameWrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #111;
+    }
+#gameContainer {
+        position: relative;
+        width: 390px;
+        max-width: 100vw;    /* 🌟 確保不超過螢幕寬度 */
+        height: 100%;        /* 🌟 改為 100%，自適應手機真實高度 */
+        max-height: 844px;   /* 🌟 最高限制為 844px */
+        overflow: hidden;
+        box-shadow: 0 0 40px rgba(0,0,0,0.8);
+    }
+
+  	/* ========== START SCREEN STYLES (紅色主題) ========== */
+  	.start-screen {
+  		position: absolute;
+  		top: 0;
+  		left: 0;
+  		width: 100%;
+  		height: 100%;
+  		background: linear-gradient(135deg, #4a0000 0%, #8b0000 50%, #b71c1c 100%);
+  		display: flex;
+  		flex-direction: column;
+  		justify-content: center;
+  		align-items: center;
+  		z-index: 1000;
+  		color: white;
+  	}
+  	.start-screen h1 {
+  		font-size: 3.5em;
+  		text-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700;
+  		color: #ffd700;
+  		margin-bottom: 50px;
+  		text-align: center;
+  	}
+  	.loading-container {
+  		width: 80%;
+  		max-width: 400px;
+  		height: 30px;
+  		background: rgba(255,255,255,0.2);
+  		border-radius: 15px;
+  		overflow: hidden;
+  		border: 2px solid #ffd700;
+  	}
+  	.loading-bar {
+  		height: 100%;
+  		width: 0%;
+  		background: linear-gradient(90deg, #ffd700, #ffed4a);
+  		transition: width 0.3s ease;
+  		box-shadow: 0 0 10px #ffd700;
+  	}
+  	.loading-text {
+  		margin-top: 20px;
+  		font-size: 1.2em;
+        font-weight: bold;
+        letter-spacing: 2px;
+  	}
+
+  	/* ========== POPUP STYLES (紅色主題) ========== */
+  	.popup-overlay {
+  		position: absolute;
+  		top: 0;
+  		left: 0;
+  		width: 100%;
+  		height: 100%;
+  		background: linear-gradient(135deg, #4a0000 0%, #8b0000 50%, #b71c1c 100%);
+  		display: none;
+  		justify-content: center;
+  		align-items: center;
+  		z-index: 1001;
+  		overflow-y: auto;
+  		padding: 20px;
+        box-sizing: border-box;
+  	}
+  	.popup-content {
+  		background: linear-gradient(135deg, #2b0000 0%, #5c0000 100%);
+  		border: 2px solid #ffd700;
+  		border-radius: 16px;
+  		padding: 16px;
+  		max-width: 360px;
+  		width: 92%;
+  		color: white;
+  		box-shadow: 0 0 25px rgba(255,215,0,0.3);
+  		max-height: 88vh;
+  		overflow-y: auto;
+        text-align: center;
+        font-size: 0.85em;
+  	}
+  	.popup-content h2 {
+  		color: #ffd700;
+  		text-align: center;
+  		margin-bottom: 10px;
+  		font-size: 1.5em;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        margin-top: 0;
+  	}
+  	.popup-content .rules {
+  		background: rgba(255,255,255,0.1);
+  		padding: 15px;
+  		border-radius: 10px;
+  		margin-bottom: 20px;
+  		font-size: 0.95em;
+  		line-height: 1.8;
+  	}
+  	.popup-content .rules p {
+  		margin: 8px 0;
+  	}
+  	.popup-content .rules .icon {
+  		margin-right: 8px;
+  	}
+  	.popup-content .consent {
+  		display: flex;
+  		align-items: flex-start;
+  		margin: 20px 0;
+  		font-size: 0.85em;
+  		line-height: 1.6;
+  	}
+  	.popup-content .consent input {
+  		margin-right: 10px;
+  		margin-top: 3px;
+  		width: 25px;
+  		height: 25px;
+  		flex-shrink: 0;
+  	}
+  	.popup-content .consent label {
+  		flex: 1;
+        font-size: 1.1em;
+  	}
+  	.popup-content button {
+  		width: 100%;
+  		padding: 10px;
+  		font-size: 1.1em;
+  		background: linear-gradient(135deg, #ffd700, #ffba00);
+  		border: none;
+  		border-radius: 8px;
+  		cursor: pointer;
+  		font-weight: bold;
+  		color: #4a0000;
+  		margin-top: 12px;
+  		transition: transform 0.1s, box-shadow 0.1s;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+  	}
+  	.popup-content button:hover {
+  		transform: scale(1.05);
+  		box-shadow: 0 0 20px #ffd700;
+  	}
+  	.popup-content button:disabled {
+  		background: #555;
+        color: #aaa;
+  		cursor: not-allowed;
+  		transform: none;
+  		box-shadow: none;
+  	}
+
+  	/* ========== INTRO PAGE STYLES ========== */
+  	.intro-page {
+  		text-align: center;
+  	}
+  	.intro-page .welcome-text {
+  		font-size: 1em;
+  		margin-bottom: 10px;
+  		line-height: 1.5;
+  	}
+  	.intro-page .prizes {
+  		background: rgba(255,215,0,0.1);
+  		border: 1px solid #ffd700;
+  		border-radius: 10px;
+  		padding: 10px;
+  		margin-bottom: 10px;
+  		text-align: left;
+  	}
+  	.intro-page .prizes h3 {
+  		color: #ffd700;
+  		margin: 0 0 6px 0;
+  		text-align: center;
+        font-size: 1em;
+  	}
+  	.intro-page .prizes ul {
+  		list-style: none;
+  		padding: 0;
+  		margin: 0;
+  	}
+  	.intro-page .prizes li {
+  		padding: 5px 0;
+  		border-bottom: 1px solid rgba(255,255,255,0.1);
+  	}
+  	.intro-page .prizes li:last-child {
+  		border-bottom: none;
+  	}
+  	.intro-page .controls-info {
+  		background: rgba(255,255,255,0.05);
+  		border-radius: 8px;
+  		padding: 8px;
+  		margin-bottom: 8px;
+  		text-align: left;
+  	}
+  	.intro-page .controls-info h3 {
+  		color: #ffd700;
+  		margin: 0 0 5px 0;
+        font-size: 1em;
+  	}
+  	.intro-page .controls-info p {
+  		margin: 3px 0;
+  	}
+  	.intro-page .tips {
+  		background: rgba(0,0,0,0.3);
+  		border-radius: 8px;
+  		padding: 8px;
+  		margin-bottom: 8px;
+  		text-align: left;
+        line-height: 1.5;
+  	}
+  	.intro-page .tips h3 {
+  		color: #3498db;
+  		margin: 0 0 5px 0;
+        font-size: 1em;
+  	}
+  	.intro-page .tips p {
+  		margin: 5px 0;
+  	}
+  	.intro-page .tips .xp-tip { color: #9b59b6; }
+  	.intro-page .tips .sp-tip { color: #3498db; }
+  	.intro-page .goal {
+  		background: rgba(255,68,68,0.2);
+  		border-radius: 8px;
+  		padding: 8px;
+  		margin-bottom: 8px;
+  	}
+  	.intro-page .goal h3 {
+  		color: #ff4444;
+  		margin: 0 0 4px 0;
+        font-size: 1em;
+  	}
+
+  	/* ========== REGISTRATION FORM ========== */
+  	.reg-form {
+  		text-align: center;
+  	}
+  	.reg-form input {
+  		width: 100%;
+  		padding: 15px;
+  		margin: 10px 0;
+  		font-size: 1.1em;
+  		border: 2px solid #ffd700;
+  		border-radius: 10px;
+  		background: rgba(255,255,255,0.9);
+  		color: #000;
+  		box-sizing: border-box;
+  	}
+  	.reg-form input::placeholder {
+  		color: rgba(0,0,0,0.5);
+  	}
+  	.reg-form button {
+  		margin-top: 20px;
+  	}
+
+  	/* ========== COUNTDOWN STYLES ========== */
+  	.countdown-overlay {
+  		position: absolute;
+  		top: 0;
+  		left: 0;
+  		width: 100%;
+  		height: 100%;
+  		background: rgba(40,0,0,0.75);
+  		display: none;
+  		justify-content: center;
+  		align-items: center;
+  		z-index: 1002;
+  	}
+  	.countdown-number {
+  		font-size: 15em;
+  		color: #ffd700;
+  		text-shadow: 0 0 40px #000;
+  		animation: pulse 1s ease-in-out;
+        font-weight: bold;
+  	}
+  	@keyframes pulse {
+  		0% { transform: scale(0.5); opacity: 0; }
+  		50% { transform: scale(1.2); }
+  		100% { transform: scale(1); opacity: 1; }
+  	}
+
+  /* ========== HUD UPDATES (精簡紅色儀表板) ========== */
+#hud { 
+        position: absolute; 
+        top: 8px; 
+        left: 0;                /* 🌟 修正1：貼齊左邊，不要推出去 */
+        width: 100%;            /* 🌟 修正2：寬度剛好 100% */
+        box-sizing: border-box; /* 🌟 修正3：強制讓內部邊距不撐破寬度 */
+        padding: 0 8px;         /* 🌟 修正4：用 padding 來取代原本 left/right 的留白 */
+        z-index: 10; 
+        pointer-events: none; 
+        display: flex; 
+        gap: 5px; 
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+    .hud-item { 
+        background: linear-gradient(135deg, #1a0000, #4a0000); 
+        padding: 5px 8px; 
+        border-radius: 8px; 
+        font-weight: bold; 
+        font-size: 0.78em; 
+        border: 1.5px solid #ffd700; 
+        box-shadow: 0 2px 6px rgba(0,0,0,0.6); 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        white-space: nowrap;
+        flex: 1;
+    }
+    .timer-display { color: #ff5252; }
+    .score-display { color: #ffd700; }
+    .speed-display { color: #4fc3f7; }
+    
+  	.boost-indicator {
+  		position: absolute;
+  		bottom: 10px;
+  		left: 50%;
+  		transform: translateX(-50%);
+  		padding: 12px 40px;
+  		border-radius: 30px;
+  		font-size: 1.8em;
+  		font-weight: bold;
+  		display: none;
+  		z-index: 10000;
+        text-shadow: 0 2px 5px rgba(0,0,0,0.6);
+        border: 2px solid #fff;
+  	}
+  	.boost-indicator.sp {
+  		background: linear-gradient(135deg, #3498db, #2980b9);
+  		color: white;
+  		box-shadow: 0 0 30px #3498db;
+  	}
+
+  	/* ========== XP BOX STYLES (圖片式按鈕) ========== */
+  	.xp-box {
+  		position: absolute;
+  		bottom: 190px;
+  		right: 10px;
+  		background: none;
+  		border: none;
+  		padding: 0;
+  		z-index: 200;
+  		cursor: pointer;
+  		display: none;
+  		transition: transform 0.1s;
+        pointer-events: auto;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+  	}
+  	.xp-box:active { transform: scale(0.88); }
+  	/* 隱藏文字元素 */
+  	.xp-box .xp-count, .xp-box .xp-text { display: none; }
+
+@media (max-width: 768px) {
+        .xp-box {
+            bottom: 190px;
+            right: 10px;
+        }
+        #hud { 
+            gap: 3px; /* 縮小三個框框之間的間距 */
+        }
+        .hud-item {
+            font-size: 0.72em; /* 稍微再縮細一點點 */
+            padding: 5px 2px;  /* 極小化左右內距 */
+            letter-spacing: -0.5px; /* 稍微收緊字體間距，防止撐爆 */
+        }
+        .score-display { 
+            flex: 1.3; /* 降低分數框佔據的寬度比例，把空間讓給 km/h */
+        }
+        .speed-display {
+            flex: 1.2; /* 確保速度框有足夠的彈性空間 */
+        }
+    }
+
+/* 🌟 XP 爆發時畫面中間閃爍文字 */
+    @keyframes flashWhite {
+        0% { opacity: 0.6; text-shadow: 0 0 10px #fff; } /* 提高最低透明度 */
+        100% { opacity: 1; text-shadow: 0 0 40px #fff, 0 0 20px #fff; }
+    }
+    @keyframes carDrive {
+        0%   { left: -200px; }
+        100% { left: 360px; }
+    }
+  	.push-to-max {
+  		position: absolute;
+  		top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2.5em;
+        font-weight: 900;
+        color: #ffffff; /* 🌟 修正 1：改為純白色，完全不透明 */
+        text-align: center;
+        z-index: 55; /* 🌟 修正 2：改為 65，確保文字顯示在特效影片 (60) 的上方！ */
+        pointer-events: none;
+        display: none;
+        animation: flashWhite 0.3s infinite alternate;
+        font-style: italic;
+        width: 100%;
+        letter-spacing: 2px;
+        text-shadow: 0 0 20px rgba(255,100,0,1), 2px 2px 4px rgba(0,0,0,1);
+    }
+    @media (max-width: 768px) {
+        .push-to-max { font-size: 1em; }
+    }
+
+  	/* ========== END GAME SCREEN (紅色主題) ========== */
+  	.end-screen {
+  		position: absolute;
+  		top: 0;
+  		left: 0;
+  		width: 100%;
+  		height: 100%;
+  		background: linear-gradient(135deg, #4a0000 0%, #8b0000 50%, #b71c1c 100%);
+  		display: none;
+  		flex-direction: column;
+  		justify-content: center;
+  		align-items: center;
+  		z-index: 1003;
+  		color: white;
+  	}
+  	.end-screen h1 {
+  		color: #ffd700; 
+        font-size: 3em; 
+        text-shadow: 0 0 20px #000; 
+        margin-bottom: 6px;
+        margin-top: 10px;
+  	}
+  	.end-screen p {
+  		font-size: 1.2em; 
+        margin: 0;
+  	}
+  	.end-screen .final-score {
+  		font-size: 3.5em; 
+        font-weight: bold; 
+        color: #fff; 
+        text-shadow: 0 0 30px #ffd700; 
+        margin: 8px 0 12px 0;
+  	}
+  	.end-screen button {
+  		padding: 15px 50px; 
+        font-size: 1.5em; 
+        background: linear-gradient(135deg, #ffd700, #ffba00); 
+        border: none; 
+        border-radius: 15px; 
+        cursor: pointer; 
+        font-weight: bold; 
+        color: #4a0000; 
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  	}
+  	.end-screen button:hover {
+  		transform: scale(1.05);
+  		box-shadow: 0 0 30px #ffd700;
+  	}
+
+  	/* ========== VIRTUAL JOYSTICK STYLES (左側半透明圓形搖桿) ========== */
+  	.joystick-container {
+  		position: absolute;
+  		bottom: 110px; /* 上移一個車身位 */
+  		left: 15px;
+        transform: none;
+  		width: 90px;
+  		height: 90px;
+  		display: none;
+  		z-index: 100;
+  	}
+  	.joystick-base {
+  		position: absolute;
+  		width: 100%;
+  		height: 100%;
+  		background: rgba(255,255,255,0.12);
+  		border: 2px solid rgba(255,255,255,0.25);
+  		border-radius: 50%;
+  	}
+  	.joystick-stick {
+  		position: absolute;
+  		width: 38px;
+  		height: 38px;
+  		background: rgba(255, 215, 0, 0.5);
+  		border: 2px solid rgba(255,255,255,0.4);
+  		border-radius: 50%;
+  		top: 50%;
+  		left: 50%;
+  		transform: translate(-50%, -50%);
+  		box-shadow: 0 0 6px rgba(0,0,0,0.25);
+  		cursor: grab;
+  		touch-action: none;
+  	}
+  	.joystick-stick:active {
+  		cursor: grabbing;
+  	}
+  	.joystick-label {
+  		display: none; /* 隐藏文字標籤 */
+  	}
+  </style>
+  
+  	<meta property="og:title" content="Retro Racing" />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://angrybud.com/games/f430/" />
+	<meta property="og:description" content="Webgame, webapp, classic 2D racing" />
+	<meta property="og:image" content="https://angrybud.com/games/pixelracing/javascript_f430_racer_Scr2.jpg" />
+
+    <meta name="twitter:title" content="Retro Racer 2D" />
+    <meta name="twitter:description" content="Webgame, webapp, classic racing" />
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://angrybud.com/games/pixelracing/javascript_f430_racer_Scr2.jpg">
+
+</head>
+
+<body>
+
+<div id="gameWrapper">
+<div id="gameContainer">
+<!-- 聲音初始化互動層 (確保瀏覽器允許播聲) -->
+<div id="audioInitOverlay" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:9999; display:none;"></div>
+
+<!-- ========== START SCREEN (封面) ========== -->
+<div id="startScreen" class="start-screen" style="position:absolute; justify-content:center; align-items:center; flex-direction:column;">
+  <!-- SINOPEC Logo 文字 -->
+  <div style="font-size:1.1em; font-weight:bold; color:rgba(255,255,255,0.7); letter-spacing:4px; margin-bottom:8px;">SINOPEC</div>
+  <!-- 遊戲標題 -->
+  <div style="
+    font-size:2.8em;
+    font-weight:900;
+    color:#ffd700;
+    text-shadow: 0 0 30px #ffd700, 0 0 60px rgba(255,215,0,0.5), 2px 2px 6px rgba(0,0,0,0.8);
+    text-align:center;
+    line-height:1.2;
+    margin-bottom:6px;
+    letter-spacing:2px;
+  ">奪金挑戰賽</div>
+  <!-- 英文副標題 -->
+  <div style="font-size:0.9em; color:rgba(255,255,255,0.6); letter-spacing:3px; margin-bottom:40px;">GOLD RUSH CHALLENGE</div>
+  <!-- 裝飾分隔線 -->
+  <div style="width:200px; height:2px; background:linear-gradient(90deg, transparent, #ffd700, transparent); margin-bottom:40px;"></div>
+  <!-- 進入按鈕 -->
+  <button id="enterBtn" style="
+    padding: 16px 50px;
+    font-size: 1.3em;
+    font-weight: 900;
+    background: linear-gradient(135deg, #ffd700, #ffba00);
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    color: #4a0000;
+    box-shadow: 0 0 30px rgba(255,215,0,0.6), 0 5px 15px rgba(0,0,0,0.4);
+    letter-spacing: 3px;
+    transition: transform 0.15s, box-shadow 0.15s;
+  ">ENTER</button>
+  <!-- 載入進度 (Loading時顯示) -->
+  <div id="coverLoadingArea" style="margin-top:40px; text-align:center; display:none;">
+    <div class="loading-container" style="width:250px;">
+      <div id="loadingBar" class="loading-bar"></div>
+    </div>
+    <p id="loadingText" class="loading-text" style="font-size:0.9em;">LOADING...</p>
+  </div>
+</div>
+
+<!-- ========== INTRODUCTION PAGE ========== -->
+<div id="introPage" class="popup-overlay" style="position:absolute;">
+  <div class="popup-content intro-page">
+    <h2>奪金挑戰賽</h2>
+    <div class="welcome-text">
+      歡迎參加「奪金挑戰賽」！Max 仔已經準備好同你一齊衝去奪金賽道，贏取終極大獎！
+    </div>
+    <div class="prizes">
+      <h3>終極大獎</h3>
+      <ul>
+        <li><strong>終極奪金王 (第1名)：</strong> 20克999足金油槍一支</li>
+        <li><strong>第2名及第3名：</strong> 1年免費入SINO X Power</li>
+        <li><strong>第1-500名：</strong> 半價入汽油券一張</li>
+        <li><strong>第501-1,000名：</strong> Easy Joy便利店電子現金券$20一張</li>
+        <li><strong>參與獎：</strong> SINO X Power直減$12電子折扣券一張</li>
+      </ul>
+    </div>
+    <div class="controls-info">
+      <h3>操控指南</h3>
+      <p><strong>自動駕駛：</strong> 賽車會自動向前加速！</p>
+      <p><strong>手機版：</strong> 拖動底部虛擬搖桿控制左右方向</p>
+      <p><strong>電腦版：</strong> 使用方向鍵 ← → 切換賽道</p>
+    </div>
+    <div class="tips">
+      <h3>奪金密技</h3>
+      <p class="xp-tip"><strong>XP 圖標：</strong> 儲存 XP 能量，點擊右下角按鈕爆發 1.5 倍極速噴火 (3倍積分)！</p>
+    </div>
+    <div class="goal">
+      <h3>目標</h3>
+      <p>在 <strong>90 秒</strong> 內避開障礙物，挑戰最高分，贏取上述重磅獎賞！</p>
+    </div>
+    <button id="introStartBtn">開始挑戰！</button>
+  </div>
+</div>
+
+<!-- ========== CONSENT PAGE ========== -->
+<div id="consentPage" class="popup-overlay" style="position:absolute;">
+  <div class="popup-content">
+    <h2>個人資料收集</h2>
+    <div class="consent">
+      <input type="checkbox" id="termsCheckbox">
+      <label for="termsCheckbox">本人已閱讀並同意此活動之<a href="#" style="color: #ffd700;">條款及細則</a>以及中石化的<a href="#" style="color: #ffd700;">私隱政策</a>。</label>
+    </div>
+    <div class="consent" style="margin-top: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px;">
+      <p style="margin: 0;">(本人同意主辦單位收集及使用閣下之姓名及電話，僅作為本活動之聯繫、得獎核實及日後中石化/SINOPEC/SINO X Power品牌市場推廣（包括優惠資訊、活動通知）之用途。我們將妥善保存閣下資料並嚴格保密。)</p>
+    </div>
+    <button id="consentSubmitBtn" disabled>同意並繼續</button>
+  </div>
+</div>
+
+<!-- ========== REGISTRATION POPUP ========== -->
+<div id="regPopup" class="popup-overlay" style="position:absolute;">
+  <div class="popup-content reg-form">
+    <h2>輸入資料</h2>
+    <input type="text" id="playerName" placeholder="請輸入姓名" maxlength="20">
+    <input type="tel" id="playerPhone" placeholder="請輸入 8 位數字電話" maxlength="8">
+    <button id="startGameBtn">開始遊戲</button>
+  </div>
+</div>
+
+<!-- ========== LOADING SCREEN (賽車在進度條上跑) ========== -->
+<div id="loadingScreen" style="
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, #4a0000 0%, #8b0000 50%, #b71c1c 100%);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1005;
+    color: white;
+    font-family: inherit;
+">
+    <!-- 進度條區域：賽車在進度條上跑 -->
+    <div style="width: 320px; position: relative; padding-top: 100px;">
+        <!-- 賽車圖片，絕對定位在進度條上方 -->
+        <img id="loadingCarImg" src="images/loading_car.png" style="
+            position: absolute;
+            bottom: 14px;
+            left: 0%;
+            height: 90px;
+            width: auto;
+            transition: left 0.3s ease;
+            transform: translateX(-30%);
+        ">
+        <!-- 進度條軌道 -->
+        <div style="width: 100%; height: 18px; background: rgba(0,0,0,0.4); border-radius: 9px; overflow: visible; border: 2px solid rgba(255,215,0,0.5); position: relative;">
+            <div id="gameLoadingBar" style="height:100%; width:0%; background: linear-gradient(90deg, #ffd700, #ffed4a); border-radius:9px; transition: width 0.3s ease; box-shadow: 0 0 10px #ffd700;"></div>
+        </div>
+    </div>
+    <div id="gameLoadingText" style="margin-top:20px; font-size:1em; color:rgba(255,255,255,0.7); letter-spacing:4px;">LOADING...</div>
+</div>
+
+<!-- ========== COUNTDOWN OVERLAY ========== -->
+<div id="countdownOverlay" class="countdown-overlay" style="position:absolute;">
+  <div id="countdownNumber" class="countdown-number">3</div>
+</div>
+
+<!-- ========== BOOST INDICATORS ========== -->
+<div id="spIndicator" class="boost-indicator sp" style="position:absolute;">2X 積分!</div>
+
+
+<!-- XP COUNTDOWN 已移至 XP BOX Canvas 內顯示 -->
+
+<!-- ========== XP EFFECT VIDEO (天空位置，去黑色背景，播一次就停) ========== -->
+<video id="xpEffectVideo" style="
+    position: absolute;
+    top: 1%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160px; /* 🌟 縮細了 1/3 (原本 240px) */
+    opacity: 0.9;
+    display: none;
+    z-index: 60;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    filter: brightness(1.3) saturate(1.6);
+" muted playsinline webkit-playsinline preload="auto"> <source src="images/xp_effect.mp4" type="video/mp4">
+</video>
+
+<!-- ========== XP BOX (圖片式) ========== -->
+<div id="xpBox" class="xp-box" style="position:absolute;">
+  <canvas id="xpCanvas" width="90" height="90" style="display:block;"></canvas>
+  <!-- 保留隐藏元素以相容舊代碼 -->
+  <span class="xp-text" style="display:none;">XP 能量</span>
+  <span id="xpCount" class="xp-count" style="display:none;">0</span>
+  <span class="xp-text" style="display:none;">按此爆發!</span>
+</div>
+
+<!-- ========== VIRTUAL JOYSTICK ========== -->
+<div id="joystickContainer" class="joystick-container" style="position:absolute;">
+  <div class="joystick-label">左右滑動控制方向</div>
+  <div class="joystick-base">
+    <div id="joystickStick" class="joystick-stick"></div>
+  </div>
+</div>
+
+<!-- ========== END GAME SCREEN ========== -->
+<div id="endScreen" class="end-screen" style="position:absolute; overflow-y:auto;">
+  <h1>TIME UP!</h1>
+  <p class="player-name">玩家: <span id="endPlayerName"></span></p>
+  <p>你的最終得分</p>
+  <div class="final-score"><span id="endFinalScore">0</span></div>
+  <div id="myRankBadge" style="
+    background: rgba(255,215,0,0.15);
+    border: 2px solid #ffd700;
+    border-radius: 12px;
+    padding: 8px 20px;
+    margin-bottom: 16px;
+    font-size: 1.2em;
+    color: #ffd700;
+    font-weight: bold;
+  ">排名: <span id="myRankNum">#-</span></div>
+
+  <!-- 排行榜 -->
+  <div id="leaderboardBox" style="
+    width: 100%;
+    max-width: 340px;
+    background: rgba(0,0,0,0.4);
+    border: 2px solid rgba(255,215,0,0.4);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  ">
+    <div style="background: rgba(255,215,0,0.2); padding: 8px; text-align:center; font-weight:bold; font-size:1em; color:#ffd700; letter-spacing:2px;">🏆 LEADERBOARD</div>
+    <div id="leaderboardList" style="padding: 0;"></div>
+  </div>
+
+  <!-- 自己的排名在最底 -->
+  <div id="myRankRow" style="
+    width: 100%;
+    max-width: 340px;
+    background: rgba(255,215,0,0.15);
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 20px;
+    display: none;
+  "></div>
+
+  <button id="playAgainBtn">再玩一次</button>
+</div>
+
+  <div id="racer">
+    <!-- 🌟 紅色主題儀表板，保留 Time, Points 同 km/h -->
+<div id="hud">
+      <div class="hud-item timer-display" style="flex: 0.8; padding: 5px 2px;">⏱ <span id="timer_value" style="margin-left:2px;">90</span><span style="font-size:0.8em;">s</span></div>
+      <div class="hud-item score-display" style="flex: 1.4; padding: 5px 2px;">🏆 <span id="score_value" style="margin-left:2px;">0</span> <span style="font-size:0.7em; margin-left:1px;">pts</span></div>
+      <div class="hud-item speed-display" style="flex: 1.2; padding: 5px 2px;">⚡ <span id="speed_value" style="margin-left:2px;">0</span><span style="font-size:0.7em; margin-left:1px;">km/h</span></div>
+    </div>
+    <canvas id="canvas">
+      Sorry, cannot run because your browser does not support &lt;canvas&gt; element
+    </canvas></div>
+
+
+  <script src="touch.js"></script>
+  
+  <!-- 🌟 覆寫 touch.js 的搖桿更新邏輯，強制變為單一橫向軌道 -->
+  <script>
+    // 圆形搖桿：支援全方向移動，只用橫向控制左右
+window.updateJoystickPosition = function(touchX, touchY) {
+        var stick = document.getElementById('joystickStick');
+        var base = document.querySelector('.joystick-base');
+        if (!stick || !base) return;
+        
+        var rect = base.getBoundingClientRect();
+        var centerX = rect.left + rect.width / 2;
+        var centerY = rect.top + rect.height / 2;
+        
+        var maxRadius = rect.width / 2 - 5;
+        var deltaX = touchX - centerX;
+        var deltaY = touchY - centerY;
+        
+        // 限制在圓形範圍內
+        var dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        if (dist > maxRadius) {
+            deltaX = (deltaX / dist) * maxRadius;
+            deltaY = (deltaY / dist) * maxRadius;
+        }
+        
+        stick.style.transform = 'translate(calc(-50% + ' + deltaX + 'px), calc(-50% + ' + deltaY + 'px))';
+        
+        // 只用橫向控制左右
+        keyLeft = deltaX < -15;
+        keyRight = deltaX > 15;
+    };
+  </script>
+
+  <script src="common.js"></script>
+
+  <script>
+// =========================================================================
+// 🌟 音效系統：利用 Web Audio API 製作「叮」聲 (無需外置音檔)
+// =========================================================================
+var audioCtx = null;
+var bgmAudio = null; // BGM 音樂元素
+var voiceAudio = null; // 🌟 XP 語音音效
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    document.getElementById('audioInitOverlay').style.display = 'none';
+    
+    // 🌟 終極解決 iOS 語音問題：利用「靜音播放」強制解鎖瀏覽器音效限制
+    if (!voiceAudio) {
+        voiceAudio = new Audio('push to th max.mp3');
+        voiceAudio.muted = true; // 1. 先設定為靜音
+        voiceAudio.play().then(function() {
+            // 2. 成功偷播後，立刻暫停並解除靜音，準備等玩家㩒 XP 時正式發聲
+            voiceAudio.pause();
+            voiceAudio.muted = false; 
+            voiceAudio.currentTime = 0;
+        }).catch(function(e){ console.log("語音解鎖失敗", e); });
+    }
+    
+    // 🌟 解鎖 iOS 影片限制
+    var xpVid = document.getElementById('xpEffectVideo');
+    if (xpVid) xpVid.load();
+}
+
+function playBGM() {
+    if (bgmAudio) return; // 已經在播放則不重複
+    bgmAudio = new Audio('music/bgm.mp3');
+    bgmAudio.loop = true;
+    bgmAudio.volume = 0.4;
+    bgmAudio.play().catch(function(e) {
+        console.log('BGM 播放失敗:', e);
+        bgmAudio = null;
+    });
+}
+
+function stopBGM() {
+    if (bgmAudio) {
+        bgmAudio.pause();
+        bgmAudio.currentTime = 0;
+        bgmAudio = null;
+    }
+}
+
+// 捕捉玩家第一次點擊，解鎖瀏覽器音效限制
+document.addEventListener('click', initAudio, { once: true });
+document.addEventListener('touchstart', initAudio, { once: true });
+
+// ========== 按鈕聲效 ==========
+function playClickSound() {
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.04);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.12);
+}
+
+function playCheckSound() {
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(660, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.06);
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.2);
+}
+
+// 為所有按鈕加入聲效
+function attachButtonSounds() {
+    var btns = document.querySelectorAll('button, .popup-content button, .xp-box');
+    btns.forEach(function(btn) {
+        btn.addEventListener('click', function() { playClickSound(); });
+        btn.addEventListener('touchstart', function() { playClickSound(); }, {passive: true});
+    });
+    var checkbox = document.getElementById('termsCheckbox');
+    if (checkbox) {
+        checkbox.addEventListener('change', function() { playCheckSound(); });
+    }
+    // 輸入框 focus 聲效
+    var inputs = document.querySelectorAll('input[type="text"], input[type="tel"]');
+    inputs.forEach(function(inp) {
+        inp.addEventListener('focus', function() { playClickSound(); });
+    });
+}
+
+// ========== 收集金幣音效 (叮叮聲) ==========
+function playCoinSound() {
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.type = 'sine'; // 清脆的圓滑波
+    osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(1600, audioCtx.currentTime + 0.05);
+    
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+    
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.2);
+}
+
+// ========== 收集 XP 專屬音效 (科技感升階) ==========
+function playXPCollectSound() {
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(440, audioCtx.currentTime); 
+    osc.frequency.setValueAtTime(554.37, audioCtx.currentTime + 0.08); 
+    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.16); 
+    
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.3);
+}
+
+// =========================================================================
+// 🌟 核心整合 1：覆寫 SPRITES 令系統支援兩張圖片 (sheet: 0 / sheet: 1)
+// 確保放喺 COLORS 定義之前！
+// =========================================================================
+var COLORS = {
+  SKY:  '#72D7EE',
+  TREE: '#005108',
+  FOG:  '#334444',
+  LIGHT:  { road: '#6B6B6B', grass: '#459928', rumble: '#555555', lane: '#CCCCCC'  },
+  DARK:   { road: '#696969', grass: '#38821f', rumble: '#BBBBBB'                   },
+  START:  { road: 'white',   grass: 'white',   rumble: 'white'                     },
+  FINISH: { road: 'black',   grass: 'black',   rumble: 'black'                     }
+};
+
+var BACKGROUND = {
+  SKY:   { x:   0, y: 0, w: 977, h: 589 } // 更新為新尺寸 977x589
+};
+
+var SPRITES = {
+  // --- 環境及障礙物 (Sheet 0) ---
+  PALM_TREE:              { x: 1830, y:  508, w:  215, h:  540, sheet: 0 },
+  TREE1:                  { x: 1470, y:  265, w:  360, h:  360, sheet: 0 },
+  TREE2:                  { x:    0, y:  661, w:  282, h:  295, sheet: 0 },
+  DEAD_TREE1:             { x:    0, y: 1709, w:  135, h:  332, sheet: 0 },
+  DEAD_TREE2:             { x: 1855, y:  248, w:  150, h:  260, sheet: 0 },
+  BUSH1:                  { x: 1790, y: 1048, w:  240, h:  155, sheet: 0 },
+  BUSH2:                  { x:  495, y: 1709, w:  232, h:  152, sheet: 0 },
+  CACTUS:                 { x: 1790, y: 1203, w:  235, h:  118, sheet: 0 },
+  STUMP:                  { x:  282, y:  661, w:  195, h:  140, sheet: 0 },
+  BOULDER1:               { x: 1855, y:    0, w:  168, h:  248, sheet: 0 },
+  BOULDER2:               { x: 1470, y:  907, w:  298, h:  140, sheet: 0 },
+  BOULDER3:               { x: 1470, y: 1047, w:  320, h:  220, sheet: 0 },
+  COLUMN:                 { x:  135, y: 1709, w:  200, h:  315, sheet: 0 },
+  COIN:                   { x:  335, y: 1853, w:  111, h:  130, sheet: 0 },
+
+  // --- 廣告牌 (Sheet 0) ---
+  BILLBOARD01:            { x: 1470, y: 1267, w:  300, h:  170, sheet: 0 },
+  BILLBOARD02:            { x: 1470, y: 1817, w:  215, h:  220, sheet: 0 },
+  BILLBOARD03:            { x: 1768, y: 1491, w:  230, h:  220, sheet: 0 },
+  BILLBOARD04:            { x: 1770, y: 1321, w:  268, h:  170, sheet: 0 },
+  BILLBOARD05:            { x: 1470, y: 1437, w:  298, h:  190, sheet: 0 },
+  BILLBOARD06:            { x: 1470, y: 1627, w:  298, h:  190, sheet: 0 },
+  BILLBOARD07:            { x: 1685, y: 1817, w:  298, h:  190, sheet: 0 },
+  BILLBOARD08:            { x: 1470, y:    0, w:  385, h:  265, sheet: 0 },
+  BILLBOARD09:            { x: 1470, y:  625, w:  328, h:  282, sheet: 0 },
+
+  // --- 路上車輛 (Sheet 0) ---
+  CAR01:                  { x:  495, y: 1983, w:   80, h:   56, sheet: 0 },
+  CAR02:                  { x:  335, y: 1983, w:   80, h:   59, sheet: 0 },
+  CAR03:                  { x:  575, y: 1983, w:   88, h:   55, sheet: 0 },
+  CAR04:                  { x:  415, y: 1983, w:   80, h:   57, sheet: 0 },
+  TRUCK:                  { x:  446, y: 1861, w:  100, h:   78, sheet: 0 },
+  SEMI:                   { x:  335, y: 1709, w:  122, h:  144, sheet: 0 },
+
+  // --- 玩家主角 (橫跨 Sheet 0 同 Sheet 1) ---
+  PLAYER_STRAIGHT:        { x:  735, y:    0, w:  735, h:  661, sheet: 0 },
+  PLAYER_LEFT:            { x:  735, y: 1322, w:  735, h:  661, sheet: 0 },
+  PLAYER_RIGHT:           { x:    0, y:    0, w:  735, h:  661, sheet: 1 }, 
+  
+  // --- 玩家主角噴火狀態 ---
+  PLAYER_STRAIGHT_FIRE:   { x:    0, y:    0, w:  735, h:  661, sheet: 0 },
+  PLAYER_LEFT_FIRE:       { x:    0, y: 1048, w:  735, h:  661, sheet: 0 },
+  PLAYER_RIGHT_FIRE:      { x:  735, y:  661, w:  735, h:  661, sheet: 0 },
+
+  // --- 玩家主角上斜狀態 (借用) ---
+  PLAYER_UPHILL_STRAIGHT: { x:  735, y:    0, w:  735, h:  661, sheet: 0 },
+  PLAYER_UPHILL_LEFT:     { x:  735, y: 1322, w:  735, h:  661, sheet: 0 },
+  PLAYER_UPHILL_RIGHT:    { x:    0, y:    0, w:  735, h:  661, sheet: 1 }
+};
+
+var REAL_CAR_WIDTH = 80;
+// 🌟 放大環境圖像比例：由 0.3 提升至 0.38，令手機版環境物件更明顯！
+SPRITES.SCALE = 0.38 * (1 / REAL_CAR_WIDTH);
+SPRITES.BILLBOARDS = [SPRITES.BILLBOARD01, SPRITES.BILLBOARD02, SPRITES.BILLBOARD03, SPRITES.BILLBOARD04, SPRITES.BILLBOARD05, SPRITES.BILLBOARD06, SPRITES.BILLBOARD07, SPRITES.BILLBOARD08, SPRITES.BILLBOARD09];
+SPRITES.PLANTS     = [SPRITES.TREE1, SPRITES.TREE2, SPRITES.DEAD_TREE1, SPRITES.DEAD_TREE2, SPRITES.PALM_TREE, SPRITES.BUSH2, SPRITES.CACTUS, SPRITES.STUMP, SPRITES.BOULDER1, SPRITES.BOULDER2];
+SPRITES.CARS       = [SPRITES.CAR01, SPRITES.CAR02, SPRITES.CAR03, SPRITES.CAR04, SPRITES.SEMI, SPRITES.TRUCK];
+
+
+// =========================================================================
+// 🌟 核心整合 2：覆寫 Render.sprite 令系統識得自動切換圖片！
+// =========================================================================
+Render.sprite = function(ctx, width, height, resolution, roadWidth, sprites, sprite, scale, destX, destY, offsetX, offsetY, clipY) {
+    var destW  = (sprite.w * scale * width/2) * (SPRITES.SCALE * roadWidth);
+    var destH  = (sprite.h * scale * width/2) * (SPRITES.SCALE * roadWidth);
+
+    destX = destX + (destW * (offsetX || 0));
+    destY = destY + (destH * (offsetY || 0));
+
+    var clipH = clipY ? Math.max(0, destY+destH-clipY) : 0;
+    if (clipH < destH) {
+        var sheetIdx = sprite.sheet || 0;
+        // 系統依家會檢查傳入黎嘅 sprites 係咪 Array，自動攞對應嘅圖
+        var img = Array.isArray(sprites) ? sprites[sheetIdx] : sprites; 
+        ctx.drawImage(img, sprite.x, sprite.y, sprite.w, sprite.h - (sprite.h*clipH/destH), destX, destY, destW, destH - clipH);
+    }
+};
+
+// =========================================================================
+// 🌟 核心整合 3：主角視覺微調系統 (大小及前後位置)
+// =========================================================================
+var NORMAL_SCALE      = 0.85;
+var NORMAL_OFFSET_Y   = -1.3; // 車身上移：-1.3
+
+var FIRE_SCALE_ADJUST = 1.0;   
+var FIRE_OFFSET_X     = -0.5;  
+var FIRE_OFFSET_Y     = -1.3; 
+
+Render.player = function(ctx, width, height, resolution, roadWidth, sprites, speedPercent, scale, destX, destY, steer, updown, isAccelerating) {
+    var bounce = (1.5 * Math.random() * speedPercent * resolution) * Util.randomChoice([-1,1]);
+    var sprite;
+    
+    // 🌟 只有喺 isAccelerating (即係 nitroActive) 嘅時候，先會選用 _FIRE 噴火圖！
+    if (steer < 0) { 
+        sprite = isAccelerating ? SPRITES.PLAYER_LEFT_FIRE : ((updown > 0) ? SPRITES.PLAYER_UPHILL_LEFT : SPRITES.PLAYER_LEFT);
+    } 
+    else if (steer > 0) { 
+        sprite = isAccelerating ? SPRITES.PLAYER_RIGHT_FIRE : ((updown > 0) ? SPRITES.PLAYER_UPHILL_RIGHT : SPRITES.PLAYER_RIGHT);
+    } 
+    else { 
+        sprite = isAccelerating ? SPRITES.PLAYER_STRAIGHT_FIRE : ((updown > 0) ? SPRITES.PLAYER_UPHILL_STRAIGHT : SPRITES.PLAYER_STRAIGHT);
+    }
+
+    var playerScale = scale * (80 / 735) * NORMAL_SCALE;
+    var offsetX = -0.5; 
+    var offsetY = NORMAL_OFFSET_Y; 
+    
+    if (isAccelerating) {
+        playerScale *= FIRE_SCALE_ADJUST;
+        offsetX = FIRE_OFFSET_X;
+        offsetY = FIRE_OFFSET_Y;
+    }
+
+    ctx.imageSmoothingEnabled = false;
+    Render.sprite(ctx, width, height, resolution, roadWidth, sprites, sprite, playerScale, destX, destY + bounce, offsetX, offsetY);
+};
+
+// =========================================================================
+// 🌟 背景適應調整：修改背景畫法，保證可以完整顯示更多元素
+// =========================================================================
+Render.background = function(ctx, background, width, height, layer, rotation, offset) {
+    rotation = rotation || 0;
+    offset   = offset   || 0;
+
+    var imageW = layer.w;
+    var imageH = layer.h;
+
+    var sourceX = layer.x + Math.floor(layer.w * rotation);
+    var sourceY = layer.y;
+    var sourceW = Math.min(imageW, layer.x+layer.w-sourceX);
+    var sourceH = imageH;
+    
+    var destX = 0;
+    var destY = offset;
+    
+    // 將比例拉闊少少，等玩家可以睇到更多背景細節
+    var scaleRatio = Math.max(width / imageW, height / imageH); 
+    
+    // 🌟 修正點 1：目標寬度必須依照「切片寬度 (sourceW)」的比例縮放
+    var destW = Math.floor(sourceW * scaleRatio); 
+    var destH = Math.floor(imageH * scaleRatio);
+
+    ctx.drawImage(background, sourceX, sourceY, sourceW, sourceH, destX, destY, destW, destH);
+    
+    // 處理背景循環銜接
+    if (sourceW < imageW) {
+      // 🌟 修正點 2：第二段接縫的寬度也必須按照正確比例計算
+      var remainW = imageW - sourceW;
+      var remainDestW = Math.floor(remainW * scaleRatio);
+      ctx.drawImage(background, layer.x, sourceY, remainW, sourceH, destW - 1, destY, remainDestW + 1, destH);
+    }
+};
+
+// ========== GAME STATE MANAGEMENT ==========
+var GameState = {
+  LOADING: 'loading',
+  INTRO: 'intro',
+  CONSENT: 'consent',
+  REGISTRATION: 'registration',
+  COUNTDOWN: 'countdown',
+  PLAYING: 'playing',
+  ENDED: 'ended'
+};
+
+var currentState = GameState.LOADING;
+var playerName = '';
+var playerPhone = '';
+var gameScore = 0;
+var totalDistance = 0; 
+var gameTimer = 90; 
+
+var storedXP = 0;       
+var nitroActive = false; 
+var nitroTimer = 0;
+var xpCooldown = 0; // XP 冷卻計時器（效果結束後 5 秒不能再用）
+// SP 已取消，移除 spBoostActive 同 spBoostTimer
+
+// 🌟 獨立的 2D 浮動特效陣列 (解決3D鏡頭消失問題)
+var activeAnimations = [];
+
+// 🌟 積分平衡：大幅降低行車距離得分，凸顯金幣價值 (跑畢全程只得約3-4萬分)
+var baseScorePerDistance = 0.04; 
+var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+var collectibles = [];
+var COLLECTIBLE_TYPES = {
+  GOLD: { name: 'gold', points: 1000, isSprite: true, sprite: SPRITES.COIN },
+  XP: { name: 'xp', points: 0, color: '#9B59B6', effect: 'xpboost', isSprite: false }
+  // SP 已取消
+};
+
+// ========== START SCREEN LOGIC (封面 + ENTER 進入介紹頁) ==========
+function initStartScreen() {
+  // 顯示封面
+  var screen = document.getElementById('startScreen');
+  screen.style.display = 'flex';
+  // 重要：封面顯示時，禁用 racer/canvas 的指點事件，防止它們殄截按鈕點擊
+  var racer = document.getElementById('racer');
+  if (racer) racer.style.pointerEvents = 'none';
+  var canvas = document.getElementById('canvas');
+  if (canvas) canvas.style.pointerEvents = 'none';
+// ENTER 按鈕事件
+  var enterBtn = document.getElementById('enterBtn');
+  if (enterBtn) {
+    enterBtn.onclick = function() {
+      playClickSound(); // ✅ 修正為正確的函數名稱
+      screen.style.display = 'none';
+      showIntroPage();
+    };
+    enterBtn.onmouseover = function() { this.style.transform = 'scale(1.08)'; this.style.boxShadow = '0 0 40px rgba(255,215,0,0.9), 0 5px 20px rgba(0,0,0,0.5)'; };
+    enterBtn.onmouseout  = function() { this.style.transform = 'scale(1)'; this.style.boxShadow = '0 0 30px rgba(255,215,0,0.6), 0 5px 15px rgba(0,0,0,0.4)'; };
+  }
+}
+
+// ========== INTRO PAGE LOGIC ==========
+function showIntroPage() {
+  currentState = GameState.INTRO;
+  var popup = document.getElementById('introPage');
+  var startBtn = document.getElementById('introStartBtn');
+
+  popup.style.display = 'flex';
+
+  startBtn.onclick = function() {
+    popup.style.display = 'none';
+    showConsentPage();
+  };
+}
+
+// ========== CONSENT PAGE LOGIC ==========
+function showConsentPage() {
+  currentState = GameState.CONSENT;
+  var popup = document.getElementById('consentPage');
+  var checkbox = document.getElementById('termsCheckbox');
+  var submitBtn = document.getElementById('consentSubmitBtn');
+
+  popup.style.display = 'flex';
+  checkbox.checked = false;
+  submitBtn.disabled = true;
+
+  checkbox.onchange = function() {
+    submitBtn.disabled = !checkbox.checked;
+  };
+
+  submitBtn.onclick = function() {
+    popup.style.display = 'none';
+    showRegPopup();
+  };
+}
+
+// ========== REGISTRATION POPUP LOGIC ==========
+function showRegPopup() {
+  currentState = GameState.REGISTRATION;
+  var popup = document.getElementById('regPopup');
+  var nameInput = document.getElementById('playerName');
+  var phoneInput = document.getElementById('playerPhone');
+  var startBtn = document.getElementById('startGameBtn');
+
+  popup.style.display = 'flex';
+  nameInput.value = '';
+  phoneInput.value = '';
+
+  startBtn.onclick = function() {
+    var nVal = nameInput.value.trim();
+    var pVal = phoneInput.value.trim();
+
+    if (nVal === '' || pVal === '') {
+      alert('請填寫完整資料');
+      return;
+    }
+    // 🌟 名稱輸入不能包含數字
+    if (/\d/.test(nVal)) {
+      alert('名稱不能包含數字');
+      return;
+    }
+    // 🌟 電話輸入必須為 8 位數字
+    if (!/^\d{8}$/.test(pVal)) {
+      alert('電話號碼必須為 8 位數字');
+      return;
+    }
+
+    playerName = nVal;
+    playerPhone = pVal;
+    popup.style.display = 'none';
+    showGameLoading(); // 顯示賽車 Loading 動畫
+  };
+}
+
+// ========== GAME LOADING ANIMATION (賽車在進度條上跑) ==========
+function showGameLoading() {
+  var screen = document.getElementById('loadingScreen');
+  var bar = document.getElementById('gameLoadingBar');
+  var text = document.getElementById('gameLoadingText');
+  var car = document.getElementById('loadingCarImg');
+  screen.style.display = 'flex';
+  
+  playEngineLoadingSound(); // 開始播放引擎聲
+  
+  var progress = 0;
+  var stuckDone = false;
+  var isStuck = false;
+
+  function updateCarPos(pct) {
+    if (car) car.style.left = pct + '%';
+  }
+  
+  var loadInterval = setInterval(function() {
+    if (isStuck) {
+        // 🌟 巧思：當進度條卡住時，引擎轉速掉下來 (模擬怠速或換檔)
+        if (loadingEngineOsc && audioCtx) {
+            loadingEngineOsc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.5);
+        }
+        return;
+    }
+
+    progress += Math.random() * 3.5 + 2.5;
+
+    // 🌟 巧思：引擎轉速隨著進度條往前衝而越來越高！(從 40Hz 拉到約 180Hz)
+    if (loadingEngineOsc && audioCtx) {
+        var targetFreq = 40 + (progress * 1.4);
+        loadingEngineOsc.frequency.linearRampToValueAtTime(targetFreq, audioCtx.currentTime + 0.28);
+    }
+
+    if (!stuckDone && progress >= 48) {
+      progress = 48;
+      bar.style.width = progress + '%';
+      updateCarPos(progress);
+      text.textContent = 'LOADING...';
+      isStuck = true;
+      setTimeout(function() {
+        isStuck = false;
+        stuckDone = true;
+        text.textContent = 'LOADING...';
+      }, 1800);
+      return;
+    }
+
+    if (progress >= 100) {
+      progress = 100;
+      bar.style.width = '100%';
+      updateCarPos(100);
+      text.textContent = 'GO!';
+      clearInterval(loadInterval);
+      
+      stopEngineLoadingSound(); // 🏁 Loading 結束，立刻平滑停止引擎聲
+      
+      setTimeout(function() {
+        screen.style.display = 'none';
+        startCountdown();
+      }, 500);
+      return;
+    }
+    bar.style.width = progress + '%';
+    updateCarPos(progress);
+  }, 280);
+}
+
+// ========== 跑車引擎 Loading 聲效 ==========
+var loadingEngineOsc = null;
+var loadingEngineGain = null;
+
+function playEngineLoadingSound() {
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
+    stopEngineLoadingSound(); // 確保不會重複播放
+
+    loadingEngineOsc = audioCtx.createOscillator();
+    loadingEngineGain = audioCtx.createGain();
+    loadingEngineOsc.connect(loadingEngineGain);
+    loadingEngineGain.connect(audioCtx.destination);
+    
+    loadingEngineOsc.type = 'sawtooth'; // 鋸齒波模擬引擎
+    loadingEngineOsc.frequency.setValueAtTime(40, audioCtx.currentTime); // 從低轉速開始
+    
+    // 音量淡入，並保持播放直到被手動停止
+    loadingEngineGain.gain.setValueAtTime(0, audioCtx.currentTime);
+    loadingEngineGain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.2);
+    
+    loadingEngineOsc.start(audioCtx.currentTime);
+}
+
+// 停止跑車引擎聲效
+function stopEngineLoadingSound() {
+    if (loadingEngineOsc && loadingEngineGain) {
+        // 0.3秒內平滑淡出，避免聲音突然斷掉產生雜音
+        loadingEngineGain.gain.cancelScheduledValues(audioCtx.currentTime);
+        loadingEngineGain.gain.setValueAtTime(loadingEngineGain.gain.value, audioCtx.currentTime);
+        loadingEngineGain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        loadingEngineOsc.stop(audioCtx.currentTime + 0.3);
+        
+        loadingEngineOsc = null;
+        loadingEngineGain = null;
+    }
+}
+// ========== 紅綠燈聲效 ==========
+function playTrafficLight(isRed) {
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    if (isRed) {
+        // 紅燈聲：短促低音
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.3);
+    } else {
+        // 綠燈聲：長促高音
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(1320, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.5);
+    }
+}
+
+// ========== COUNTDOWN LOGIC ==========
+function startCountdown() {
+  currentState = GameState.COUNTDOWN;
+  var overlay = document.getElementById('countdownOverlay');
+  var numberEl = document.getElementById('countdownNumber');
+  overlay.style.display = 'flex';
+
+  if (isMobile) {
+    document.getElementById('joystickContainer').style.display = 'block';
+  }
+
+  var count = 3;
+  numberEl.textContent = count;
+  playTrafficLight(true); // 第一聲紅燈
+
+  var countdownInterval = setInterval(function() {
+    count--;
+    if (count > 0) {
+      numberEl.textContent = count;
+      numberEl.style.animation = 'none';
+      numberEl.offsetHeight; 
+      numberEl.style.animation = 'pulse 1s ease-in-out';
+      playTrafficLight(true); // 紅燈聲
+    } else {
+      clearInterval(countdownInterval);
+      numberEl.textContent = 'GO!';
+      numberEl.style.animation = 'none';
+      numberEl.offsetHeight;
+      numberEl.style.animation = 'pulse 1s ease-in-out';
+      playTrafficLight(false); // 綠燈聲
+      setTimeout(function() {
+        overlay.style.display = 'none';
+        startGame();
+      }, 500);
+    }
+  }, 1000);
+}
+
+// ========== GAME START ==========
+function startGame() {
+  currentState = GameState.PLAYING;
+  // 游戲開始，恢復 racer/canvas 的指點事件
+  var racer = document.getElementById('racer');
+  if (racer) racer.style.pointerEvents = 'auto';
+  var canvasEl = document.getElementById('canvas');
+  if (canvasEl) canvasEl.style.pointerEvents = 'auto';
+  gameScore = 0;
+  totalDistance = 0;
+  gameTimer = 90;
+  storedXP = 0;
+  nitroActive = false;
+  nitroTimer = 0;
+  xpCooldown = 0;
+  // SP 已取消，不需要 spBoostActive/spBoostTimer
+activeAnimations = []; // Reset animations
+              document.getElementById('hud').style.display = 'flex'; // 🌟 確保每次重新開始遊戲都會顯示儀表板！
+              playBGM(); // 倒數完成後才播放 BGM
+
+              playerX = 0;
+  speed = 0;
+  position = 0;
+
+  document.getElementById('score_value').textContent = 0;
+  document.getElementById('timer_value').textContent = 90;
+
+  generateCollectibles();
+  startGameTimer();
+  updateXPBox();
+}
+
+// ========== GAME TIMER ==========
+var timerInterval = null;
+function startGameTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(function() {
+    if (currentState !== GameState.PLAYING) return;
+
+    gameTimer--;
+    updateHud('timer', gameTimer);
+
+    if (gameTimer <= 0) {
+      endGame();
+    }
+  }, 1000);
+}
+
+// ========== GENERATE COLLECTIBLES ==========
+function generateCollectibles() {
+  collectibles = [];
+  var numCollectibles = 600; // 🌟 1. 金幣數量加倍 (由100改為200)
+
+  // 平均分佈：將跨道分成等分區間，每區間內隨機放置一個物品
+  var totalSegments = segments.length;
+  var spacing = Math.floor(totalSegments / numCollectibles);
+
+  // 🌟 2. XP 數量加約 30% (總數200之下，每12個放一個，大約有 16-17 個 XP)
+  var xpPositions = [];
+  for (var x = 0; x < numCollectibles; x += 20) {
+    xpPositions.push(x);
+  }
+
+  for (var i = 0; i < numCollectibles; i++) {
+    var isXP = xpPositions.indexOf(i) >= 0;
+    var collectible = isXP ? COLLECTIBLE_TYPES.XP : COLLECTIBLE_TYPES.GOLD;
+
+    // 平均分佈到跨道不同位置
+    var baseSegment = Math.floor(i * spacing);
+    var segmentIndex = (baseSegment + Math.floor(Math.random() * spacing * 0.5)) % totalSegments;
+    
+    // 🌟 強制將金幣/XP 散佈到 5 條不同嘅軌道 (包含左右路肩邊緣)
+    var laneOptions = [-1.3, -0.65, 0, 0.65, 1.3]; 
+    var lane = laneOptions[Math.floor(Math.random() * laneOptions.length)];
+
+    collectibles.push({
+      type: collectible,
+      segmentIndex: segmentIndex,
+      offset: lane,
+      collected: false
+    });
+  }
+}
+
+// ========== CHECK COLLECTIBLE COLLISION ==========
+function checkCollectibleCollision() {
+  var playerSegment = findSegment(position + playerZ);
+  
+  for (var i = 0; i < collectibles.length; i++) {
+    var c = collectibles[i];
+    if (c.collected) {
+        continue;
+    }
+    
+    // 🌟 加大前段與後段嘅判定範圍，防止速度過快時「穿透」金幣
+    var isPassed = false;
+    for (var s = 0; s <= 4; s++) {
+        var checkIdx = (playerSegment.index - s + segments.length) % segments.length;
+        if (c.segmentIndex === checkIdx) {
+            isPassed = true;
+            break;
+        }
+    }
+    
+    if (isPassed) {
+        var dx = Math.abs(playerX - c.offset);
+        // 🌟 分別設定判定範圍：XP 畀大啲 (0.8)，金幣維持 (0.5)
+        var hitBox = (c.type.name === 'xp') ? 0.8 : 0.5; 
+        
+        if (dx < hitBox) { 
+            c.collected = true;
+            collectItem(c); 
+        }
+    }
+  }
+}
+
+// ========== MARIO 收集特效 ==========
+function collectItem(c) {
+  var type = c.type;
+
+  if (type.effect === 'xpboost') {
+  playXPCollectSound(); // 🌟 食到 XP 時播放專屬音效
+    if (storedXP < 3) { // 最多儲 3 個 XP
+        storedXP++;
+        updateXPBox();
+    }
+  } else {
+    // SP 已取消，直接處理金幣收集
+    playCoinSound(); // 🌟 播放叮叮聲
+    
+    var points = type.points;
+    // XP啟動時 3倍積分（SP已取消）
+    if (nitroActive) {
+        points *= 3;
+    }
+    gameScore += points;
+    updateHud('score', gameScore);
+
+    // 🌟 加入獨立嘅 2D 畫布動畫陣列，解決被 3D 鏡頭消失嘅問題
+    activeAnimations.push({
+        type: 'gold',
+        timer: 1.0,
+        text: '+' + points,
+        xOffset: c.offset // 紀錄喺左中右邊度食，用嚟定位
+    });
+  }
+}
+
+// XP 音效 (Web Audio API - 能量爆發上升音)
+function playXPSound() {
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    // 第一層：低音吸氣感
+    var osc1 = audioCtx.createOscillator();
+    var gain1 = audioCtx.createGain();
+    osc1.connect(gain1); gain1.connect(audioCtx.destination);
+    osc1.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(120, audioCtx.currentTime);
+    osc1.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + 0.15);
+    gain1.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+    osc1.start(audioCtx.currentTime);
+    osc1.stop(audioCtx.currentTime + 0.15);
+    // 第二層：中音上升音
+    var osc2 = audioCtx.createOscillator();
+    var gain2 = audioCtx.createGain();
+    osc2.connect(gain2); gain2.connect(audioCtx.destination);
+    osc2.type = 'square';
+    osc2.frequency.setValueAtTime(300, audioCtx.currentTime + 0.05);
+    osc2.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.4);
+    gain2.gain.setValueAtTime(0.0, audioCtx.currentTime);
+    gain2.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.1);
+    gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+    osc2.start(audioCtx.currentTime + 0.05);
+    osc2.stop(audioCtx.currentTime + 0.45);
+    // 第三層：高音爆發感
+    var osc3 = audioCtx.createOscillator();
+    var gain3 = audioCtx.createGain();
+    osc3.connect(gain3); gain3.connect(audioCtx.destination);
+    osc3.type = 'sine';
+    osc3.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1);
+    osc3.frequency.exponentialRampToValueAtTime(2400, audioCtx.currentTime + 0.5);
+    gain3.gain.setValueAtTime(0.0, audioCtx.currentTime + 0.1);
+    gain3.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.2);
+    gain3.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.55);
+    osc3.start(audioCtx.currentTime + 0.1);
+    osc3.stop(audioCtx.currentTime + 0.55);
+}
+
+// XP 筱按鈕點擊事件
+function activateXP() {
+  // 冷卻期間或已在用XP效果中，不能再用
+  if (storedXP > 0 && !nitroActive && xpCooldown <= 0 && currentState === GameState.PLAYING) {
+    storedXP--; 
+    updateXPBox();
+    nitroActive = true; 
+    nitroTimer = 5; 
+    playXPSound(); // XP 音效
+	// 🌟 播放語音音效
+if (voiceAudio) {
+    voiceAudio.currentTime = 0;
+    voiceAudio.play().catch(function(e){ console.log('語音播放失敗', e); });
+}
+// 播放 XP 特效 MP4
+    var vid = document.getElementById('xpEffectVideo');
+    if (vid) {
+        vid.style.display = 'block';
+        vid.currentTime = 0;
+        vid.play().catch(function(){});
+        // 🌟 已經刪除 onended 隱藏指令。影片播完後會停留在最後一格。
+        // 當 XP 狀態 (nitroActive) 結束時，遊戲主迴圈會自動把它隱藏。
+    }
+  }
+}
+document.getElementById('xpBox').addEventListener('click', activateXP);
+// 增加 touchstart 事件，就算手指在搖桿上也能觸發 XP
+document.getElementById('xpBox').addEventListener('touchstart', function(e) {
+  e.stopPropagation(); // 防止觸控展開到 canvas
+  activateXP();
+}, {passive: true});
+
+// ========== 用 Canvas 繪製 XP 圖片式按鈕 ==========
+function drawXPButton(count, cooldown) {
+    var canvas = document.getElementById('xpCanvas');
+    if (!canvas) return;
+    var ctx2 = canvas.getContext('2d');
+    var w = canvas.width, h = canvas.height;
+    ctx2.clearRect(0, 0, w, h);
+
+    var isCooling = (cooldown > 0);
+    var isReady = (count > 0 && !isCooling);
+
+    // 外圈光暈
+    ctx2.save();
+    ctx2.shadowColor = isReady ? 'rgba(255,80,0,0.9)' : 'rgba(100,100,100,0.5)';
+    ctx2.shadowBlur = 14;
+    // 圓形背景
+    var grad = ctx2.createRadialGradient(w/2, h/2, 5, w/2, h/2, w/2);
+    if (isCooling) {
+        // 冷卻中：藍色調
+        grad.addColorStop(0, '#003366');
+        grad.addColorStop(0.6, '#001a44');
+        grad.addColorStop(1, '#000d22');
+    } else if (isReady) {
+        grad.addColorStop(0, '#ff3300');
+        grad.addColorStop(0.6, '#cc0000');
+        grad.addColorStop(1, '#6b0000');
+    } else {
+        grad.addColorStop(0, '#555');
+        grad.addColorStop(1, '#222');
+    }
+    ctx2.beginPath();
+    ctx2.arc(w/2, h/2, w/2 - 3, 0, Math.PI * 2);
+    ctx2.fillStyle = grad;
+    ctx2.fill();
+    // 邊框
+    ctx2.strokeStyle = isCooling ? '#4488ff' : (isReady ? '#ffd700' : '#555');
+    ctx2.lineWidth = 3;
+    ctx2.stroke();
+    ctx2.restore();
+
+    ctx2.save();
+    ctx2.textAlign = 'center';
+    if (isCooling) {
+        // 冷卻狀態：顯示 COOLDOWN 文字和倒數
+        ctx2.fillStyle = '#88aaff';
+        ctx2.font = 'bold 10px Arial';
+        ctx2.fillText('COOLDOWN', w/2, h/2 - 18);
+        ctx2.font = 'bold 28px Arial';
+        ctx2.fillStyle = '#aaccff';
+        ctx2.shadowColor = '#4488ff';
+        ctx2.shadowBlur = 8;
+        ctx2.fillText(Math.ceil(cooldown), w/2, h/2 + 10);
+        ctx2.font = 'bold 9px Arial';
+        ctx2.fillStyle = 'rgba(136,170,255,0.8)';
+        ctx2.shadowBlur = 0;
+        ctx2.fillText('XP 能量: ' + count, w/2, h/2 + 28);
+    } else {
+        // 正常狀態
+        ctx2.fillStyle = isReady ? '#ffd700' : '#888';
+        ctx2.font = 'bold 13px Arial';
+        ctx2.fillText('XP 能量', w/2, h/2 - 18);
+        ctx2.font = 'bold 30px Arial';
+        ctx2.fillStyle = isReady ? '#ffffff' : '#666';
+        ctx2.shadowColor = isReady ? '#ffd700' : 'transparent';
+        ctx2.shadowBlur = isReady ? 8 : 0;
+        ctx2.fillText(count, w/2, h/2 + 10);
+        ctx2.font = 'bold 10px Arial';
+        ctx2.fillStyle = isReady ? 'rgba(255,200,200,0.9)' : '#555';
+        ctx2.shadowBlur = 0;
+        ctx2.fillText(isReady ? '按此爆發!' : '無能量', w/2, h/2 + 28);
+    }
+    ctx2.restore();
+}
+
+function updateXPBox() {
+  var box = document.getElementById('xpBox');
+  if (currentState === GameState.PLAYING) {
+      box.style.display = 'block';
+  }
+  document.getElementById('xpCount').textContent = storedXP;
+  drawXPButton(storedXP, xpCooldown); // 更新 Canvas 圖片（傳入冷卻狀態）
+}
+
+// ========== 排行榜系統 (localStorage) ==========
+var LEADERBOARD_KEY = 'raceLeaderboard_v1';
+
+function maskPhone(phone) {
+    var s = String(phone);
+    if (s.length <= 4) return s;
+    return s.slice(0, 2) + '****' + s.slice(-2);
+}
+
+function saveScore(name, phone, score) {
+    var data = [];
+    try { data = JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || '[]'); } catch(e) { data = []; }
+    data.push({ name: name, phone: phone, score: score, time: Date.now() });
+    // 按分數降序排序
+    data.sort(function(a, b) { return b.score - a.score; });
+    // 保留最多 100 條
+    if (data.length > 100) data = data.slice(0, 100);
+    try { localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(data)); } catch(e) {}
+    return data;
+}
+
+function renderLeaderboard(allData, myName, myPhone, myScore) {
+    var list = document.getElementById('leaderboardList');
+    var myRankRow = document.getElementById('myRankRow');
+    var myRankNum = document.getElementById('myRankNum');
+    if (!list) return;
+
+    // 找自己的排名（找最高分的同名同電話）
+    var myRank = -1;
+    for (var i = 0; i < allData.length; i++) {
+        if (allData[i].name === myName && allData[i].phone === myPhone && allData[i].score === myScore) {
+            myRank = i + 1;
+            break;
+        }
+    }
+    if (myRankNum) myRankNum.textContent = myRank > 0 ? '#' + myRank : '#-';
+
+    // 顯示頭 10 位
+    var top10 = allData.slice(0, 10);
+    var html = '';
+    var medals = ['🥇', '🥈', '🥉'];
+    for (var j = 0; j < top10.length; j++) {
+        var entry = top10[j];
+        var rank = j + 1;
+        var medal = medals[j] || ('#' + rank);
+        var isMe = (entry.name === myName && entry.phone === myPhone && entry.score === myScore);
+        var rowBg = isMe ? 'rgba(255,215,0,0.2)' : (j % 2 === 0 ? 'rgba(255,255,255,0.04)' : 'transparent');
+        var nameColor = isMe ? '#ffd700' : '#fff';
+        html += '<div style="display:flex; align-items:center; padding:7px 12px; background:' + rowBg + '; border-bottom:1px solid rgba(255,255,255,0.06);">';
+        html += '<span style="width:36px; font-size:1.1em; text-align:center;">' + medal + '</span>';
+        html += '<span style="flex:1; font-size:0.9em; color:' + nameColor + '; font-weight:' + (isMe ? 'bold' : 'normal') + ';">' + entry.name + '</span>';
+        html += '<span style="width:80px; font-size:0.8em; color:rgba(255,255,255,0.6); text-align:center;">' + maskPhone(entry.phone) + '</span>';
+        html += '<span style="width:70px; font-size:0.95em; color:#ffd700; font-weight:bold; text-align:right;">' + entry.score + '</span>';
+        html += '</div>';
+    }
+    list.innerHTML = html;
+
+    // 如果自己在頭 10 外，在最底展示自己
+    if (myRank > 10 && myRank > 0) {
+        myRankRow.style.display = 'block';
+        myRankRow.innerHTML = '<div style="display:flex; align-items:center;">' +
+            '<span style="width:36px; font-size:1em; text-align:center; color:#ffd700;">#' + myRank + '</span>' +
+            '<span style="flex:1; font-size:0.9em; color:#ffd700; font-weight:bold;">' + myName + '</span>' +
+            '<span style="width:80px; font-size:0.8em; color:rgba(255,255,255,0.6); text-align:center;">' + maskPhone(myPhone) + '</span>' +
+            '<span style="width:70px; font-size:0.95em; color:#ffd700; font-weight:bold; text-align:right;">' + myScore + '</span>' +
+            '</div>';
+    } else {
+        myRankRow.style.display = 'none';
+    }
+}
+
+// ========== END GAME ==========
+function endGame() {
+  currentState = GameState.ENDED;
+  if (timerInterval) clearInterval(timerInterval);
+
+  stopBGM(); // 遊戲結束停止 BGM
+  // 停止 XP 特效視頻
+  var vid = document.getElementById('xpEffectVideo');
+  if (vid) { vid.pause(); vid.style.display = 'none'; }
+  // 重置 XP 冷卻
+  xpCooldown = 0;
+
+  document.getElementById('endPlayerName').textContent = playerName;
+  document.getElementById('endFinalScore').textContent = gameScore;
+  
+  // 儲存分數并顯示排行榜
+  var allData = saveScore(playerName, playerPhone, gameScore);
+  renderLeaderboard(allData, playerName, playerPhone, gameScore);
+
+document.getElementById('endScreen').style.display = 'flex';
+
+  document.getElementById('hud').style.display = 'none';
+  if (document.getElementById('xpBox')) document.getElementById('xpBox').style.display = 'none';
+}
+function resetToStart() { 
+    location.reload(); 
+}
+
+		  // 🌟 動態適應手機螢幕大小
+		  function detect_screen () {
+		  	var wx = 390;
+		  	var wy = window.innerHeight; // 🌟 自動抓取手機真實可視高度，不再寫死 844
+            if (wy > 844) wy = 844;      // 電腦版最高限制為 844
+
+		  	var domCanvas = Dom.get('canvas');
+		  	var domRacer = Dom.get('racer');
+		  	var domHud = Dom.get('hud');
+		  	
+		  	domCanvas.style.width = wx + 'px';
+		  	domCanvas.style.height = wy + 'px';
+		  	domRacer.style.width = wx + 'px';
+		  	domRacer.style.height = wy + 'px';
+		  	domHud.style.width = wx + 'px';
+		  	
+		  	return { 'width' : wx, 'height' : wy };
+		  }
+	  
+	  var activate_flag = false;
+
+	  function touch_update() {
+		// 🌟 若偵測到自帶嘅 joystickActive，直接忽略以防止與上方強制橫向 Joystick 衝突
+	  	if (! ongoingTouches.length && ! activate_flag ) {
+            return;
+        }
+	  	if (! activate_flag ) {
+            activate_flag = true;
+        }
+	  	keyLeft = false; 
+        keyRight = false;
+
+	  	for ( var i = 0; i < ongoingTouches.length; i++ ) {
+	  		if ( ongoingTouches[i].pageX < width/2 ) {
+                keyLeft = true;
+            } else if ( ongoingTouches[i].pageX > width/2 ) {
+                keyRight = true;
+            }
+	  	}
+
+		if ( keyLeft && keyRight ) { 
+            keySlower = true; 
+            keyLeft = false; 
+            keyRight = false; 
+        } else { 
+            keyFaster  = true; 
+        }
+
+		if ( speed == 0 ) {
+            activate_flag = false;
+        }
+	  }
+	  
+	  var touch = new TouchControl(document.getElementsByTagName("canvas")[0]);
+	  	  
+    var fps            = 60;                      
+    var step           = 1/fps;                   
+    var width          = 1024;                    
+    var height         = 512;                     
+    var centrifugal    = 0.3;                     
+    var skySpeed       = 0.001;                   
+    var hillSpeed      = 0.002;                   
+    var treeSpeed      = 0.003;                   
+    var skyOffset      = 0;                       
+    var hillOffset     = 0;                       
+    var treeOffset     = 0;                       
+    var segments       = [];                      
+    var cars           = [];                      
+    var canvas         = Dom.get('canvas');       
+    var ctx            = canvas.getContext('2d'); 
+    ctx.imageSmoothingEnabled = false; 
+
+    var background     = null;                    
+    var sprites        = null;                    
+    var resolution     = null;                    
+    var roadWidth      = 2000;                    
+    var segmentLength  = 200;                     
+    var rumbleLength   = 3;                       
+    var trackLength    = null;                    
+    var lanes          = 3;                       
+    var fieldOfView    = 100;                     
+    var cameraHeight   = 1100;                    
+    var cameraDepth    = null;                    
+    var drawDistance   = 300;                     
+    var playerX        = 0;                       
+    var playerZ        = null;                    
+    var fogDensity     = 5;                       
+    var position       = 0;                       
+    var speed          = 0;                 
+    var shakeTimer     = 0; // 🌟 撞車震動計時器	
+    
+    // 🌟 定義最高速度同埋加減速 (修復死機卡死嘅關鍵位置！)
+    var maxSpeed       = segmentLength/step;      
+    var accel          =  maxSpeed/5;             
+    var breaking       = -maxSpeed;               
+    var decel          = -maxSpeed/5;             
+    var offRoadDecel   = -maxSpeed;               // 🌟 離開跑道大幅減速 (移至正確位置，絕對唔會再報 NaN 死機！)
+    var offRoadLimit   =  maxSpeed/5;             // 🌟 越野極速限制 
+    var totalCars      = 200;                     
+
+    var keyLeft        = false;
+    var keyRight       = false;
+    var keyFaster      = false;
+    var keySlower      = false;
+
+    var hud = {
+      speed:            { value: null, dom: Dom.get('speed_value')            },
+      timer:            { value: null, dom: Dom.get('timer_value')            },
+      score:            { value: null, dom: Dom.get('score_value')            }
+    }
+
+	var find_dimensions = detect_screen();
+	width = find_dimensions.width;
+	height = find_dimensions.height;
+
+    function update(dt) {
+      touch_update();
+      var currentMaxSpeed = maxSpeed;
+      var effectiveAccel = accel;
+      var effectiveDecel = decel;
+
+      if (currentState === GameState.PLAYING) {
+        if (nitroActive) { 
+            nitroTimer -= dt; 
+            currentMaxSpeed = maxSpeed * 1.5; 
+            effectiveAccel = accel * 3; // 🌟 XP 加速力提升
+            if (nitroTimer <= 0) {
+                nitroActive = false; 
+                // 停止 XP 特效 MP4
+                var vid = document.getElementById('xpEffectVideo');
+                if (vid) { vid.pause(); vid.style.display = 'none'; }
+                // 效果結束，啟動 5 秒冷卻
+                xpCooldown = 5;
+                updateXPBox(); // 更新按鈕顯示冷卻倒數
+            }
+        }
+        // XP 冷卻計時
+        if (xpCooldown > 0) {
+            xpCooldown -= dt;
+            if (xpCooldown <= 0) { xpCooldown = 0; }
+            updateXPBox(); // 更新 Canvas 顯示冷卻倒數
+        }
+        // SP 已取消
+checkCollectibleCollision();
+      } else { // 🌟 將原本的 else if 刪除，改為單純的 else
+        // 只要不是 PLAYING (包含 COUNTDOWN 狀態)，就無視所有按鍵並停止更新畫面
+        keyLeft = false; 
+        keyRight = false; 
+        keyFaster = false; 
+        keySlower = false; 
+        return; 
+      }
+      var n, car, carW, sprite, spriteW;
+      var playerSegment = findSegment(position+playerZ);
+      
+      // 🌟 將判定改為 40，配合放大了的環境做靈活避讓
+      var playerW       = 40 * SPRITES.SCALE; 
+      
+      var speedPercent  = speed/maxSpeed;
+      var dx            = dt * 2 * speedPercent; 
+      var startPosition = position;
+
+      updateCars(dt, playerSegment, playerW);
+
+      var oldPosition = position;
+      position = Util.increase(position, dt * speed, trackLength);
+
+      if (currentState === GameState.PLAYING && speed > 0) {
+        var distanceTraveled = Math.abs(position - oldPosition);
+        if (position < oldPosition) {
+            distanceTraveled = trackLength - distanceTraveled + position - oldPosition;
+        }
+        totalDistance += distanceTraveled;
+        var distanceScore = Math.floor(distanceTraveled * baseScorePerDistance);
+        
+        // XP啟動時行車積分也是3倍（SP已取消）
+        if (nitroActive) {
+            distanceScore *= 3;
+        }
+        
+        if (distanceScore > 0) { 
+            gameScore += distanceScore; 
+            updateHud('score', gameScore); 
+        }
+      }
+
+      if (keyLeft) {
+          playerX = playerX - dx;
+      } else if (keyRight) {
+          playerX = playerX + dx;
+      }
+
+      playerX = playerX - (dx * speedPercent * playerSegment.curve * centrifugal);
+
+      // 🌟 【自動向前】只要冇踩 Brake (keySlower)，就自動畀油加速
+      if (keySlower) {
+          speed = Util.accelerate(speed, breaking, dt);
+      } else {
+          speed = Util.accelerate(speed, effectiveAccel, dt);
+      }
+
+      // 🌟 環境障礙物碰撞：撞到即停，並加反作用力推開防卡死
+      if ((playerX < -1) || (playerX > 1)) {
+        if (speed > offRoadLimit) {
+            speed = Util.accelerate(speed, offRoadDecel, dt);
+        }
+        for(n = 0 ; n < playerSegment.sprites.length ; n++) {
+          sprite  = playerSegment.sprites[n]; 
+          spriteW = sprite.source.w * SPRITES.SCALE;
+          var objX = sprite.offset + spriteW/2 * (sprite.offset > 0 ? 1 : -1);
+          if (Util.overlap(playerX, playerW, objX, spriteW * 0.8)) {
+                speed = 0; // 🌟 撞到即停
+                shakeTimer = 0.3; // 🌟 啟動震動 0.3秒
+                // 🌟 修正：撞樹後強制將車推回「馬路中心」方向，避免被外面多重樹木夾死！
+                playerX = playerX + (playerX > 0 ? -0.2 : 0.2); 
+                break;
+              }
+        }
+      }
+
+      // 🌟 車輛碰撞：撞到即停，並加反作用力推開防卡死
+      for(n = 0 ; n < playerSegment.cars.length ; n++) {
+        car  = playerSegment.cars[n]; 
+        carW = car.sprite.w * SPRITES.SCALE;
+        if (speed > car.speed) {
+          if (Util.overlap(playerX, playerW, car.offset, carW * 0.8)) {
+            speed = 0; // 🌟 撞到即停
+			shakeTimer = 0.3; // 🌟 啟動震動 0.3秒
+            // 瞬間將玩家微推遠離前車中心，保證唔會死機卡實！
+            playerX = playerX + (playerX > car.offset ? 0.1 : -0.1); 
+            break;
+          }
+        }
+      }
+
+      // 🌟 稍微收窄草地極限邊界(由 3 改為 2.2)，防止駛得太入草地深處卡死
+      playerX = Util.limit(playerX, -2.2, 2.2);     
+      speed = Util.limit(speed, 0, currentMaxSpeed);
+
+      skyOffset  = Util.increase(skyOffset,  skySpeed  * playerSegment.curve * (position-startPosition)/segmentLength, 1);
+      hillOffset = Util.increase(hillOffset, hillSpeed * playerSegment.curve * (position-startPosition)/segmentLength, 1);
+      treeOffset = Util.increase(treeOffset, treeSpeed * playerSegment.curve * (position-startPosition)/segmentLength, 1);
+
+// 🌟 計算 km/h，實際速度不變，顯示數字按比例放大
+      var realKmh = (speed / maxSpeed) * 133.33;
+      // 公式： 133.33 * 1.25 = 167, 200 * 1.25 = 250
+      var displayKmh = Math.round(realKmh * 1.25);
+
+      updateHud('speed', displayKmh); // 🌟 補回更新儀表板代碼
+
+      // 🌟 執行畫面震動
+      if (shakeTimer > 0) {
+          shakeTimer -= dt;
+          var shakeX = (Math.random() - 0.5) * 15;
+          var shakeY = (Math.random() - 0.5) * 15;
+          canvas.style.transform = 'translate(' + shakeX + 'px, ' + shakeY + 'px)';
+      } else {
+          canvas.style.transform = 'translate(0px, 0px)';
+      }
+    } // 🌟 補回呢個極度重要嘅大括號！
+
+    function updateCars(dt, playerSegment, playerW) {
+      var n, car, oldSegment, newSegment;
+      for(n = 0 ; n < cars.length ; n++) {
+        car         = cars[n]; 
+        oldSegment  = findSegment(car.z);
+        car.offset  = car.offset + updateCarOffset(car, oldSegment, playerSegment, playerW);
+        car.z       = Util.increase(car.z, dt * car.speed, trackLength);
+        car.percent = Util.percentRemaining(car.z, segmentLength); 
+        newSegment  = findSegment(car.z);
+        
+        if (oldSegment != newSegment) {
+          var index = oldSegment.cars.indexOf(car);
+          oldSegment.cars.splice(index, 1); 
+          newSegment.cars.push(car);
+        }
+      }
+    }
+
+    function updateCarOffset(car, carSegment, playerSegment, playerW) {
+      var i, j, dir, segment, otherCar, otherCarW, lookahead = 20, carW = car.sprite.w * SPRITES.SCALE;
+      
+      if ((carSegment.index - playerSegment.index) > drawDistance) {
+          return 0;
+      }
+      
+      for(i = 1 ; i < lookahead ; i++) {
+        segment = segments[(carSegment.index+i)%segments.length];
+        
+        if ((segment === playerSegment) && (car.speed > speed) && (Util.overlap(playerX, playerW, car.offset, carW, 1.2))) {
+          if (playerX > 0.5) {
+              dir = -1; 
+          } else if (playerX < -0.5) {
+              dir = 1; 
+          } else {
+              dir = (car.offset > playerX) ? 1 : -1;
+          }
+          return dir * 1/i * (car.speed-speed)/maxSpeed; 
+        }
+        
+        for(j = 0 ; j < segment.cars.length ; j++) {
+          otherCar  = segment.cars[j]; 
+          otherCarW = otherCar.sprite.w * SPRITES.SCALE;
+          if ((car.speed > otherCar.speed) && Util.overlap(car.offset, carW, otherCar.offset, otherCarW, 1.2)) {
+            if (otherCar.offset > 0.5) {
+                dir = -1; 
+            } else if (otherCar.offset < -0.5) {
+                dir = 1; 
+            } else {
+                dir = (car.offset > otherCar.offset) ? 1 : -1;
+            }
+            return dir * 1/i * (car.speed-otherCar.speed)/maxSpeed;
+          }
+        }
+      }
+      if (car.offset < -0.9) return 0.1; 
+      else if (car.offset > 0.9) return -0.1; 
+      else return 0;
+    }
+
+    function updateHud(key, value) { 
+      if (hud[key].value !== value) { 
+          hud[key].value = value; 
+          Dom.set(hud[key].dom, value); 
+      }
+    }
+
+    function renderCollectiblesInSegment(segment, segmentDrawIndex) {
+      if (!segment.p1.screen.scale) return;
+      for (var i = 0; i < collectibles.length; i++) {
+        var c = collectibles[i];
+        if (c.segmentIndex !== segment.index) continue;
+
+        var spriteScale = segment.p1.screen.scale * 0.5;
+        // 貧對路面的 X 位置
+        var spriteX = segment.p1.screen.x + (spriteScale * c.offset * roadWidth * width/2);
+        // 貧地面：直接用 segment.p1.screen.y 作為地面基準點
+        var spriteY = segment.p1.screen.y;
+
+        if (!c.collected) { 
+            if (c.type.isSprite) {
+                // offsetY=-1 表示圖片底部對齊 spriteY，即貧地面
+                Render.sprite(ctx, width, height, resolution, roadWidth, sprites, c.type.sprite, spriteScale, spriteX, spriteY, -0.5, -1, segment.clip);
+            } else {
+                // XP 圓形標誌：底部貧地面
+                var size = Math.max(10, spriteScale * roadWidth * width/4);
+                var circleY = spriteY - size; // 圓心在地面上方 size 處
+                ctx.beginPath(); 
+                ctx.arc(spriteX, circleY, size * 1.5, 0, Math.PI * 2);
+                ctx.fillStyle = c.type.color + '40'; 
+                ctx.fill();
+                
+                ctx.beginPath(); 
+                ctx.arc(spriteX, circleY, size, 0, Math.PI * 2);
+                ctx.fillStyle = c.type.color; 
+                ctx.fill();
+                
+                ctx.fillStyle = '#fff'; 
+                ctx.font = 'bold ' + (size * 1.2) + 'px Arial';
+                ctx.textAlign = 'center'; 
+                ctx.textBaseline = 'middle';
+                ctx.fillText('XP', spriteX, circleY);
+            }
+        }
+      }
+    }
+
+    function render() {
+      var baseSegment   = findSegment(position);
+      var basePercent   = Util.percentRemaining(position, segmentLength);
+      var playerSegment = findSegment(position+playerZ);
+      var playerPercent = Util.percentRemaining(position+playerZ, segmentLength);
+      var playerY       = Util.interpolate(playerSegment.p1.world.y, playerSegment.p2.world.y, playerPercent);
+      var maxy          = height;
+      var x  = 0; 
+      var dx = - (baseSegment.curve * basePercent);
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.imageSmoothingEnabled = false;
+      Render.background(ctx, background, width, height, BACKGROUND.SKY,   skyOffset,  resolution * skySpeed  * playerY);
+
+      var n, i, segment, car, sprite, spriteScale, spriteX, spriteY;
+
+      for(n = 0 ; n < drawDistance ; n++) {
+        segment        = segments[(baseSegment.index + n) % segments.length];
+        segment.looped = segment.index < baseSegment.index;
+        segment.fog    = Util.exponentialFog(n/drawDistance, fogDensity);
+        segment.clip   = maxy;
+
+        Util.project(segment.p1, (playerX * roadWidth) - x,      playerY + cameraHeight, position - (segment.looped ? trackLength : 0), cameraDepth, width, height, roadWidth);
+        Util.project(segment.p2, (playerX * roadWidth) - x - dx, playerY + cameraHeight, position - (segment.looped ? trackLength : 0), cameraDepth, width, height, roadWidth);
+
+        x  = x + dx; 
+        dx = dx + segment.curve;
+
+        if ((segment.p1.camera.z <= cameraDepth) || 
+            (segment.p2.screen.y >= segment.p1.screen.y) || 
+            (segment.p2.screen.y >= maxy)) {
+            continue;
+        }
+
+        Render.segment(ctx, width, lanes, 
+                       segment.p1.screen.x, segment.p1.screen.y, segment.p1.screen.w, 
+                       segment.p2.screen.x, segment.p2.screen.y, segment.p2.screen.w, 
+                       segment.fog, segment.color);
+        maxy = segment.p1.screen.y;
+      }
+
+      for(n = (drawDistance-1) ; n > 0 ; n--) {
+        segment = segments[(baseSegment.index + n) % segments.length];
+
+        for(i = 0 ; i < segment.cars.length ; i++) {
+          car         = segment.cars[i]; 
+          spriteScale = Util.interpolate(segment.p1.screen.scale, segment.p2.screen.scale, car.percent);
+          spriteX     = Util.interpolate(segment.p1.screen.x,     segment.p2.screen.x,     car.percent) + (spriteScale * car.offset * roadWidth * width/2);
+          spriteY     = Util.interpolate(segment.p1.screen.y,     segment.p2.screen.y,     car.percent);
+          
+          ctx.imageSmoothingEnabled = false;
+          Render.sprite(ctx, width, height, resolution, roadWidth, sprites, car.sprite, spriteScale, spriteX, spriteY, -0.5, -1, segment.clip);
+        }
+
+        for(i = 0 ; i < segment.sprites.length ; i++) {
+          sprite      = segment.sprites[i]; 
+          spriteScale = segment.p1.screen.scale;
+          spriteX     = segment.p1.screen.x + (spriteScale * sprite.offset * roadWidth * width/2);
+          spriteY     = segment.p1.screen.y;
+          
+          ctx.imageSmoothingEnabled = false;
+          Render.sprite(ctx, width, height, resolution, roadWidth, sprites, sprite.source, spriteScale, spriteX, spriteY, (sprite.offset < 0 ? -1 : 0), -1, segment.clip);
+        }
+
+        if (currentState === GameState.PLAYING) {
+            renderCollectiblesInSegment(segment, n);
+        }
+
+        if (segment == playerSegment) {
+          var currentMaxSpeed = nitroActive ? (maxSpeed * 1.5) : maxSpeed;
+          // 🌟 只有喺撳咗 XP 制 (nitroActive = true) 嘅時候，先會出現噴火圖！
+          var isAccelerating = nitroActive; 
+          Render.player(ctx, width, height, resolution, roadWidth, sprites, speed/currentMaxSpeed,
+                        cameraDepth/playerZ, width/2, (height/2) - (cameraDepth/playerZ * Util.interpolate(playerSegment.p1.camera.y, playerSegment.p2.camera.y, playerPercent) * height/2),
+                        speed * (keyLeft ? -1 : keyRight ? 1 : 0), playerSegment.p2.world.y - playerSegment.p1.world.y, isAccelerating);
+        }
+      }
+
+      // 🌟 繪製獨立的 2D 金幣彈跳特效 (不受 3D 鏡頭限制，動態 Y 軸保證唔會飛出畫面)
+      for (var i = activeAnimations.length - 1; i >= 0; i--) {
+          var anim = activeAnimations[i];
+          anim.timer -= step;
+          
+          if (anim.timer <= 0) {
+              activeAnimations.splice(i, 1);
+              continue;
+          }
+
+          var progress = 1 - anim.timer; 
+          var baseY = height * 0.70; // 🌟 調整動畫高度為畫面 70% 開始
+          var jumpY = Math.sin(progress * Math.PI) * (height * 0.35); // 拋物線高度
+          var floatY = progress * (height * 0.1); // 隨時間微浮向上
+          
+          // 🌟 收窄 X 軸偏移倍數，保證特效絕對唔會飛出左右畫面之外
+          var animX = (width / 2) + (anim.xOffset * width * 0.25); 
+          var animY = baseY - jumpY - floatY; 
+
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, anim.timer); 
+          
+          if (anim.type === 'gold') {
+              // 畫金幣圖案
+              var coinSprite = SPRITES.COIN;
+              var img = Array.isArray(sprites) ? sprites[coinSprite.sheet || 0] : sprites;
+              ctx.drawImage(img, coinSprite.x, coinSprite.y, coinSprite.w, coinSprite.h, animX - 25, animY - 40, 50, 60);
+              
+              // 畫加分數字，加粗及描邊令數字非常明顯
+              ctx.font = 'bold 40px Arial';
+              ctx.textAlign = 'center';
+              ctx.lineWidth = 4;
+              ctx.strokeStyle = '#000';
+              ctx.strokeText(anim.text, animX, animY - 60);
+              ctx.fillStyle = '#FFD700';
+              ctx.fillText(anim.text, animX, animY - 60);
+          }
+          ctx.restore();
+      }
+	  // 🌟 繪製極速線條效果 (160km/h 以上觸發)
+      var currentKmh = Math.round((speed / maxSpeed) * 133.33 * 1.25);
+      if (currentKmh >= 160) {
+          ctx.save();
+          ctx.translate(width / 2, height / 2); // 移去畫面中心
+          for (var j = 0; j < 20; j++) { // 畫 20 條線
+              ctx.rotate(Math.random() * Math.PI * 2);
+              ctx.fillStyle = 'rgba(255, 255, 255, ' + (Math.random() * 0.6) + ')';
+              ctx.fillRect(width / 4 + Math.random() * 100, 0, Math.random() * 250 + 50, Math.random() * 3 + 1);
+          }
+          ctx.restore();
+      }
+    }
+
+    function findSegment(z) { 
+        return segments[Math.floor(z/segmentLength) % segments.length]; 
+    }
+
+    function lastY() { 
+        return (segments.length == 0) ? 0 : segments[segments.length-1].p2.world.y; 
+    }
+
+    function addSegment(curve, y) {
+      var n = segments.length;
+      segments.push({ 
+          index: n, 
+          p1: { world: { y: lastY(), z:  n   *segmentLength }, camera: {}, screen: {} }, 
+          p2: { world: { y: y, z: (n+1)*segmentLength }, camera: {}, screen: {} }, 
+          curve: curve, 
+          sprites: [], 
+          cars: [], 
+          color: Math.floor(n/rumbleLength)%2 ? COLORS.DARK : COLORS.LIGHT 
+      });
+    }
+
+    function addSprite(n, sprite, offset) { 
+        segments[n].sprites.push({ source: sprite, offset: offset }); 
+    }
+
+    function addRoad(enter, hold, leave, curve, y) {
+      var startY   = lastY(); 
+      var endY     = startY + (Util.toInt(y, 0) * segmentLength); 
+      var n, total = enter + hold + leave;
+      
+      for(n = 0 ; n < enter ; n++) {
+          addSegment(Util.easeIn(0, curve, n/enter), Util.easeInOut(startY, endY, n/total));
+      }
+      for(n = 0 ; n < hold  ; n++) {
+          addSegment(curve, Util.easeInOut(startY, endY, (enter+n)/total));
+      }
+      for(n = 0 ; n < leave ; n++) {
+          addSegment(Util.easeInOut(curve, 0, n/leave), Util.easeInOut(startY, endY, (enter+hold+n)/total));
+      }
+    }
+
+    var ROAD = { 
+        LENGTH: { NONE: 0, SHORT:  25, MEDIUM:   50, LONG:  100 }, 
+        HILL: { NONE: 0, LOW: 20, MEDIUM: 40, HIGH: 60 }, 
+        CURVE: { NONE: 0, EASY: 2, MEDIUM: 4, HARD: 6 } 
+    };
+
+    function addStraight(num) { 
+        num = num || ROAD.LENGTH.MEDIUM; 
+        addRoad(num, num, num, 0, 0); 
+    }
+    
+    function addHill(num, height) { 
+        num = num || ROAD.LENGTH.MEDIUM; 
+        height = height || ROAD.HILL.MEDIUM; 
+        addRoad(num, num, num, 0, height); 
+    }
+    
+    function addCurve(num, curve, height) { 
+        num = num || ROAD.LENGTH.MEDIUM; 
+        curve = curve || ROAD.CURVE.MEDIUM; 
+        height = height || ROAD.HILL.NONE; 
+        addRoad(num, num, num, curve, height); 
+    }
+        
+    function addLowRollingHills(num, height) {
+      num = num || ROAD.LENGTH.SHORT; 
+      height = height || ROAD.HILL.LOW;
+      addRoad(num, num, num, 0, height/2); 
+      addRoad(num, num, num, 0, -height); 
+      addRoad(num, num, num, ROAD.CURVE.EASY, height); 
+      addRoad(num, num, num, 0, 0); 
+      addRoad(num, num, num, -ROAD.CURVE.EASY, height/2); 
+      addRoad(num, num, num, 0, 0);
+    }
+
+    function addSCurves() {
+      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, -ROAD.CURVE.EASY, ROAD.HILL.NONE); 
+      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.CURVE.MEDIUM, ROAD.HILL.MEDIUM); 
+      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.CURVE.EASY, -ROAD.HILL.LOW); 
+      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, -ROAD.CURVE.EASY, ROAD.HILL.MEDIUM); 
+      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, -ROAD.CURVE.MEDIUM, -ROAD.HILL.MEDIUM);
+    }
+
+    function addBumps() {
+      addRoad(10, 10, 10, 0, 5); 
+      addRoad(10, 10, 10, 0, -2); 
+      addRoad(10, 10, 10, 0, -5); 
+      addRoad(10, 10, 10, 0, 8); 
+      addRoad(10, 10, 10, 0, 5); 
+      addRoad(10, 10, 10, 0, -7); 
+      addRoad(10, 10, 10, 0, 5); 
+      addRoad(10, 10, 10, 0, -2);
+    }
+
+    function addDownhillToEnd(num) { 
+        num = num || 200; 
+        addRoad(num, num, num, -ROAD.CURVE.EASY, -lastY()/segmentLength); 
+    }
+
+    function resetRoad() {
+      segments = [];
+      addStraight(ROAD.LENGTH.SHORT); 
+      addLowRollingHills(); 
+      addSCurves(); 
+      addCurve(ROAD.LENGTH.MEDIUM, ROAD.CURVE.MEDIUM, ROAD.HILL.LOW); 
+      addBumps(); 
+      addLowRollingHills(); 
+      addCurve(ROAD.LENGTH.LONG*2, ROAD.CURVE.MEDIUM, ROAD.HILL.MEDIUM); 
+      addStraight(); 
+      addHill(ROAD.LENGTH.MEDIUM, ROAD.HILL.HIGH); 
+      addSCurves(); 
+      addCurve(ROAD.LENGTH.LONG, -ROAD.CURVE.MEDIUM, ROAD.HILL.NONE); 
+      addHill(ROAD.LENGTH.LONG, ROAD.HILL.HIGH); 
+      addCurve(ROAD.LENGTH.LONG, ROAD.CURVE.MEDIUM, -ROAD.HILL.LOW); 
+      addBumps(); 
+      addHill(ROAD.LENGTH.LONG, -ROAD.HILL.MEDIUM); 
+      addStraight(); 
+      addSCurves(); 
+      addDownhillToEnd();
+      
+      resetSprites(); 
+      resetCars();
+
+      segments[findSegment(playerZ).index + 2].color = COLORS.START; 
+      segments[findSegment(playerZ).index + 3].color = COLORS.START;
+      
+      for(var n = 0 ; n < rumbleLength ; n++) {
+          segments[segments.length-1-n].color = COLORS.FINISH;
+      }
+      
+      trackLength = segments.length * segmentLength;
+    }
+
+    function resetSprites() {
+      var n, i;
+      addSprite(20,  SPRITES.BILLBOARD07, -1); 
+      addSprite(40,  SPRITES.BILLBOARD06, -1); 
+      addSprite(60,  SPRITES.BILLBOARD08, -1); 
+      addSprite(80,  SPRITES.BILLBOARD09, -1); 
+      addSprite(100, SPRITES.BILLBOARD01, -1); 
+      addSprite(120, SPRITES.BILLBOARD02, -1); 
+      addSprite(140, SPRITES.BILLBOARD03, -1); 
+      addSprite(160, SPRITES.BILLBOARD04, -1); 
+      addSprite(180, SPRITES.BILLBOARD05, -1);
+      
+      addSprite(240, SPRITES.BILLBOARD07, -1.2); 
+      addSprite(240, SPRITES.BILLBOARD06,  1.2); 
+      addSprite(segments.length - 25, SPRITES.BILLBOARD07, -1.2); 
+      addSprite(segments.length - 25, SPRITES.BILLBOARD06,  1.2);
+
+      for(n = 10 ; n < 200 ; n += 4 + Math.floor(n/100)) { 
+          addSprite(n, SPRITES.PALM_TREE, 0.5 + Math.random()*0.5); 
+          addSprite(n, SPRITES.PALM_TREE,   1 + Math.random()*2); 
+      }
+      
+      for(n = 250 ; n < 1000 ; n += 5) { 
+          addSprite(n, SPRITES.COLUMN, 1.1); 
+          addSprite(n + Util.randomInt(0,5), SPRITES.TREE1, -1 - (Math.random() * 2)); 
+          addSprite(n + Util.randomInt(0,5), SPRITES.TREE2, -1 - (Math.random() * 2)); 
+      }
+      
+      for(n = 200 ; n < segments.length ; n += 3) { 
+          addSprite(n, Util.randomChoice(SPRITES.PLANTS), Util.randomChoice([1,-1]) * (2 + Math.random() * 5)); 
+      }
+
+      var side, sprite, offset;
+      for(n = 1000 ; n < (segments.length-50) ; n += 100) {
+        side = Util.randomChoice([1, -1]); 
+        addSprite(n + Util.randomInt(0, 50), Util.randomChoice(SPRITES.BILLBOARDS), -side);
+        for(i = 0 ; i < 20 ; i++) { 
+            sprite = Util.randomChoice(SPRITES.PLANTS); 
+            offset = side * (1.5 + Math.random()); 
+            addSprite(n + Util.randomInt(0, 50), sprite, offset); 
+        }
+      }
+    }
+
+    function resetCars() {
+      cars = []; 
+      var n, car, segment, offset, z, sprite, speed;
+      for (n = 0 ; n < totalCars ; n++) {
+        offset = Math.random() * Util.randomChoice([-0.8, 0.8]); 
+        z = Math.floor(Math.random() * segments.length) * segmentLength;
+        sprite = Util.randomChoice(SPRITES.CARS); 
+        speed  = maxSpeed/4 + Math.random() * maxSpeed/(sprite == SPRITES.SEMI ? 4 : 2);
+        car = { offset: offset, z: z, sprite: sprite, speed: speed }; 
+        segment = findSegment(car.z); 
+        segment.cars.push(car); 
+        cars.push(car);
+      }
+    }
+
+    //=========================================================================
+    // THE GAME LOOP
+    //=========================================================================
+    Game.run({
+      canvas: canvas, 
+      render: render, 
+      update: update, 
+      step: step,
+      images: ["background", "texture-0", "texture-1"], 
+      keys: [
+        { keys: [KEY.LEFT,  KEY.A], mode: 'down', action: function() { keyLeft   = true;  } },
+        { keys: [KEY.RIGHT, KEY.D], mode: 'down', action: function() { keyRight  = true;  } },
+        { keys: [KEY.UP,    KEY.W], mode: 'down', action: function() { keyFaster = true;  } },
+        { keys: [KEY.DOWN,  KEY.S], mode: 'down', action: function() { keySlower = true;  } },
+        { keys: [KEY.LEFT,  KEY.A], mode: 'up',   action: function() { keyLeft   = false; } },
+        { keys: [KEY.RIGHT, KEY.D], mode: 'up',   action: function() { keyRight  = false; } },
+        { keys: [KEY.UP,    KEY.W], mode: 'up',   action: function() { keyFaster = false; } },
+        { keys: [KEY.DOWN,  KEY.S], mode: 'up',   action: function() { keySlower = false; } }
+      ],
+      ready: function(images) {
+        console.log('Game ready callback called');
+        background = images[0];
+        sprites    = [images[1], images[2]]; 
+        reset();
+        
+        initStartScreen();
+        attachButtonSounds(); // 為所有按鈕加入聲效
+        document.getElementById('playAgainBtn').onclick = resetToStart;
+      }
+    });
+
+    function reset(options) {
+      options       = options || {};
+      canvas.width  = width  = Util.toInt(options.width,          width);
+      canvas.height = height = Util.toInt(options.height,         height);
+      ctx.imageSmoothingEnabled = false; 
+      lanes                  = Util.toInt(options.lanes,          lanes);
+      roadWidth              = Util.toInt(options.roadWidth,      roadWidth);
+      cameraHeight           = Util.toInt(options.cameraHeight,   cameraHeight);
+      drawDistance           = Util.toInt(options.drawDistance,   drawDistance);
+      fogDensity             = Util.toInt(options.fogDensity,     fogDensity);
+      fieldOfView            = Util.toInt(options.fieldOfView,    fieldOfView);
+      segmentLength          = Util.toInt(options.segmentLength,  segmentLength);
+      rumbleLength           = Util.toInt(options.rumbleLength,   rumbleLength);
+      cameraDepth            = 1 / Math.tan((fieldOfView/2) * Math.PI/180);
+      playerZ                = (cameraHeight * cameraDepth);
+      resolution             = height/480;
+
+      if ((segments.length==0) || (options.segmentLength) || (options.rumbleLength)) {
+        resetRoad(); 
+      }
+    }
+
+  </script>
+
+</div><!-- /gameContainer -->
+</div><!-- /gameWrapper -->
+</body> 
+</html>

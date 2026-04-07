@@ -829,44 +829,44 @@ window.updateJoystickPosition = function(touchX, touchY) {
 // 🌟 音效系統：利用 Web Audio API 製作「叮」聲 (無需外置音檔)
 // =========================================================================
 var audioCtx = null;
-var bgmAudio = null; // BGM 音樂元素
-var voiceAudio = null; // 🌟 XP 語音音效
+var bgmAudio = null; 
+var voiceAudio = null; 
 
 function initAudio() {
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-    }
-    document.getElementById('audioInitOverlay').style.display = 'none';
-    
-    // 🌟 終極解決 iOS 語音問題：利用「靜音播放」強制解鎖瀏覽器音效限制
+    try {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    } catch(e) { console.log("AudioContext 初始化失敗"); }
+
+    var overlay = document.getElementById('audioInitOverlay');
+    if (overlay) overlay.style.display = 'none';
+
+    // 🌟 預載語音 MP3
     if (!voiceAudio) {
-        voiceAudio = new Audio('push to th max.mp3');
-        voiceAudio.muted = true; // 1. 先設定為靜音
-        voiceAudio.play().then(function() {
-            // 2. 成功偷播後，立刻暫停並解除靜音，準備等玩家㩒 XP 時正式發聲
-            voiceAudio.pause();
-            voiceAudio.muted = false; 
-            voiceAudio.currentTime = 0;
-        }).catch(function(e){ console.log("語音解鎖失敗", e); });
+        voiceAudio = new Audio('push to the max.mp3');
+        voiceAudio.load();
     }
     
-    // 🌟 解鎖 iOS 影片限制
+    // 🌟 預載影片
     var xpVid = document.getElementById('xpEffectVideo');
     if (xpVid) xpVid.load();
 }
 
+// 🌟 終極防呆：確保玩家任何點擊都會強制啟動音效系統！
+document.addEventListener('click', initAudio, { once: true });
+document.addEventListener('touchstart', initAudio, { once: true });
+window.addEventListener('keydown', initAudio, { once: true });
+
 function playBGM() {
-    if (bgmAudio) return; // 已經在播放則不重複
+    if (bgmAudio) return;
     bgmAudio = new Audio('music/bgm.mp3');
     bgmAudio.loop = true;
     bgmAudio.volume = 0.4;
-    bgmAudio.play().catch(function(e) {
-        console.log('BGM 播放失敗:', e);
-        bgmAudio = null;
-    });
+    bgmAudio.play().catch(function(e) {});
 }
 
 function stopBGM() {
@@ -1644,26 +1644,27 @@ function playXPSound() {
 
 // XP 筱按鈕點擊事件
 function activateXP() {
-  // 冷卻期間或已在用XP效果中，不能再用
   if (storedXP > 0 && !nitroActive && xpCooldown <= 0 && currentState === GameState.PLAYING) {
     storedXP--; 
     updateXPBox();
     nitroActive = true; 
     nitroTimer = 5; 
-    playXPSound(); // XP 音效
-	// 🌟 播放語音音效
-if (voiceAudio) {
-    voiceAudio.currentTime = 0;
-    voiceAudio.play().catch(function(e){ console.log('語音播放失敗', e); });
-}
-// 播放 XP 特效 MP4
+    
+    // 1. 播放合成音效
+    playXPSound(); 
+    
+    // 2. 播放 MP3 語音 (加上防錯機制)
+    if (voiceAudio) {
+        voiceAudio.currentTime = 0;
+        voiceAudio.play().catch(function(e){ console.log("MP3 播放受阻:", e); });
+    }
+
+    // 3. 顯示影片特效
     var vid = document.getElementById('xpEffectVideo');
     if (vid) {
         vid.style.display = 'block';
         vid.currentTime = 0;
         vid.play().catch(function(){});
-        // 🌟 已經刪除 onended 隱藏指令。影片播完後會停留在最後一格。
-        // 當 XP 狀態 (nitroActive) 結束時，遊戲主迴圈會自動把它隱藏。
     }
   }
 }

@@ -153,11 +153,28 @@ app.post('/api/game/submit', (req, res) => {
       scoreDetails         // 第三個參數：超詳細計分結果
     );
 
-    res.json({
-      success: true,
-      message: 'Score submitted',
-      recordId
-    });
+   // ✅ 修復：返回 gameScore 和 scoreBreakdown，讓前端可以啟用分享按鈕
+const player = db.getPlayer(player_id);
+
+res.json({
+  success: true,
+  message: 'Score submitted',
+  recordId,
+  gameScore: scoreDetails.totalScore,       // ← 新增
+  scoreBreakdown: {                          // ← 新增
+    coins: scoreDetails.coins,
+    coinScore: scoreDetails.coinScore,
+    boostedCoins: scoreDetails.boostedCoins,
+    normalCoins: scoreDetails.normalCoins,
+    distanceScore: scoreDetails.distanceScore,
+    xpUsed: scoreDetails.xpUsed,
+    xpBoostedCoinScore: scoreDetails.xpBoostedCoinScore,
+    xpBoostedDistanceScore: scoreDetails.xpBoostedDistanceScore,
+    totalScore: scoreDetails.totalScore
+  },
+  player: player ? formatPlayerResponse(player) : null  // ← 新增
+});
+
 
   } catch (error) {
     console.error('Submit error:', error);
